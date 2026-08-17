@@ -70,3 +70,25 @@ class WordSearchPuzzle:
             "words": sorted(self.words),
             "skipped": self.skipped,
         }
+
+    def to_storage_dict(self):
+        return {
+            "size": self.size,
+            "grid": self.grid,
+            "words": self.words,
+            "skipped": self.skipped,
+            "placements": [
+                {"word": p.word, "row": p.row, "col": p.col, "dr": p.dr, "dc": p.dc}
+                for p in self.placements
+            ],
+        }
+
+    @classmethod
+    def from_placements(cls, size, grid, words, skipped, placements):
+        obj = cls.__new__(cls)
+        obj.size = size
+        obj.grid = grid
+        obj.words = words
+        obj.skipped = skipped
+        obj.placements = [PlacedWord(p["word"], p["row"], p["col"], p["dr"], p["dc"]) for p in placements]
+        return obj

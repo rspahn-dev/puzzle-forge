@@ -1,10 +1,24 @@
+databases:
+  - name: puzzle-forge-db
+    plan: free
+    databaseName: puzzle_forge
+    user: puzzle_forge
+
 services:
   - type: web
     name: puzzle-forge
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && flask db upgrade
     startCommand: gunicorn wsgi:app --workers 1 --bind 0.0.0.0:$PORT
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_APP
+        value: app.py
+      - key: DATABASE_URL
+        fromDatabase:
+          name: puzzle-forge-db
+          property: connectionString

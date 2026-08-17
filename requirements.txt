@@ -3,3 +3,6 @@ anthropic
 reportlab
 python-dotenv
 gunicorn
+flask-sqlalchemy
+flask-migrate
+psycopg2-binary

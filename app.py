@@ -1,21 +1,22 @@
 import os
 import tempfile
-import uuid
 
 from dotenv import load_dotenv
 from flask import Flask, after_this_request, jsonify, render_template, request, send_file
 
 load_dotenv()
 
+from config import Config
+from extensions import db, migrate
+from models import Puzzle
 from wordsearch.generator import WordSearchPuzzle
 from wordsearch.pdf_export import export_pdf
 from wordsearch.themes import get_word_list
 
 app = Flask(__name__)
-
-# In-memory store so a browser can request a PDF right after generating a
-# puzzle, without re-running the LLM call. Fine for a single-process MVP.
-_puzzles = {}
+app.config.from_object(Config)
+db.init_app(app)
+migrate.init_app(app, db)
 
 
 @app.route("/")
@@ -38,21 +39,30 @@ def generate():
     words, source = get_word_list(theme, count=count)
 
     puzzle = WordSearchPuzzle(words, size=size)
-    puzzle_id = str(uuid.uuid4())
-    _puzzles[puzzle_id] = (puzzle, theme)
+
+    row = Puzzle(
+        game_type="word_search",
+        theme=theme,
+        params={"size": size, "count": count},
+        data=puzzle.to_storage_dict(),
+        source=source,
+    )
+    db.session.add(row)
+    db.session.commit()
 
     result = puzzle.to_dict()
-    result["puzzle_id"] = puzzle_id
+    result["puzzle_id"] = row.id
     result["source"] = source
     return jsonify(result)
 
 
 @app.route("/download/<puzzle_id>.pdf")
 def download(puzzle_id):
-    entry = _puzzles.get(puzzle_id)
-    if entry is None:
+    row = Puzzle.query.get(puzzle_id)
+    if row is None:
         return "Puzzle not found — generate a new one.", 404
-    puzzle, theme = entry
+    puzzle = WordSearchPuzzle.from_placements(**row.data)
+    theme = row.theme
 
     fd, path = tempfile.mkstemp(suffix=".pdf")
     os.close(fd)

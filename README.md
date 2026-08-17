@@ -27,6 +27,8 @@ of live generation.
 python -m venv .venv
 .venv\Scripts\activate      # Windows
 pip install -r requirements.txt
+set FLASK_APP=app.py
+flask db upgrade            # creates instance/puzzles.db (sqlite) locally
 ```
 
 Optional, for AI-generated word lists on any theme:
@@ -49,7 +51,15 @@ Then open http://127.0.0.1:5000
 - `wordsearch/themes.py` — calls the Anthropic API to turn a theme into a word list
 - `wordsearch/pdf_export.py` — renders a puzzle to a print-ready PDF via reportlab
 - `app.py` — Flask routes: `/` (form), `/generate` (JSON API), `/download/<id>.pdf`
+- `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate
+  instances, and the `Puzzle` model (persists generated puzzles so PDF
+  download never needs to re-run the LLM call, and survives restarts)
+- `migrations/` — Alembic migration scripts (`flask db migrate` / `upgrade`)
 - `templates/`, `static/` — frontend
+
+Database: defaults to a local `instance/puzzles.db` SQLite file if
+`DATABASE_URL` isn't set. Render provides `DATABASE_URL` automatically
+from the attached Postgres instance in production.
 
 ## Deploy (Render)
 
@@ -60,27 +70,31 @@ service tier:
    `rspahn-dev/puzzle-forge`).
 2. In the [Render dashboard](https://dashboard.render.com), choose
    **New → Blueprint** and select the `puzzle-forge` repo.
-3. Render reads `render.yaml` and prompts you for the one secret it
-   doesn't get from git: `ANTHROPIC_API_KEY`. Paste it in (optional — the
-   app works fine without it, using the offline word bank).
-4. Deploy. Render builds with `pip install -r requirements.txt` and runs
+3. Render also reads the `databases:` block and provisions a free
+   Postgres instance, wiring its connection string into the web
+   service's `DATABASE_URL` automatically — no manual step needed there.
+4. Render prompts you for the one secret it doesn't get from git:
+   `ANTHROPIC_API_KEY`. Paste it in (optional — the app works fine
+   without it, using the offline word bank).
+5. Deploy. Render builds with
+   `pip install -r requirements.txt && flask db upgrade` (applying any
+   pending migrations) and runs
    `gunicorn wsgi:app --workers 1 --bind 0.0.0.0:$PORT`.
-5. Visit the assigned `*.onrender.com` URL.
+6. Visit the assigned `*.onrender.com` URL.
 
 Notes:
 - Free tier spins down after ~15 min idle; the next request takes ~30s to
   wake it back up. Fine for low-traffic use; upgrade to a paid plan later
   for always-on if needed.
-- `--workers 1` is required as long as puzzles live in the in-memory
-  store below — multiple workers would each have their own copy and
-  `/download/<id>.pdf` would 404 depending which worker handled it.
+- Render's free Postgres instances expire after 90 days and need
+  recreating (or upgrading to a paid plan) — a known limitation of the
+  free tier, not something this app can work around.
+- `--workers 1` is a deliberate choice for now — future phases (auth,
+  session-heavy features) haven't been load-tested beyond a single
+  worker yet.
 
 ## Notes / next steps
 
-- Puzzles are kept in an in-memory dict keyed by UUID so the PDF download
-  doesn't need to re-run the LLM call. Fine for local/single-process use;
-  would need a real store (DB, Redis, or signed puzzle-in-URL) before
-  deploying with multiple workers.
 - Each `/generate` call costs a small amount against the Anthropic API key —
   worth adding rate limiting before making this public.
 - KDP/Etsy book angle: PDF export is per-puzzle today; a batch mode that
