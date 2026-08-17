@@ -5,7 +5,7 @@ import re
 
 import anthropic
 
-from wordsearch.offline_words import get_offline_word_list
+from games.offline_words import get_offline_word_list
 
 DEFAULT_MODEL = os.environ.get("WORDSEARCH_MODEL", "claude-haiku-4-5-20251001")
 

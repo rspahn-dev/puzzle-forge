@@ -47,15 +47,20 @@ Then open http://127.0.0.1:5000
 
 ## Project structure
 
-- `wordsearch/generator.py` — grid placement algorithm (pure Python, no deps)
-- `wordsearch/themes.py` — calls the Anthropic API to turn a theme into a word list
-- `wordsearch/pdf_export.py` — renders a puzzle to a print-ready PDF via reportlab
-- `app.py` — Flask routes: `/` (form), `/generate` (JSON API), `/download/<id>.pdf`
+- `app.py` — `create_app()` factory; registers each game's blueprint
+- `games/wordlists.py` — turns a theme into a word list (LLM or offline bank)
+- `games/offline_words.py` — curated word banks + generic fallback
+- `games/word_search/` — the word search game: `generator.py` (grid
+  placement, pure Python, no deps), `pdf_export.py` (reportlab), and
+  `routes.py` (the `/`, `/generate`, `/download/<id>.pdf` blueprint)
 - `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate
   instances, and the `Puzzle` model (persists generated puzzles so PDF
   download never needs to re-run the LLM call, and survives restarts)
 - `migrations/` — Alembic migration scripts (`flask db migrate` / `upgrade`)
-- `templates/`, `static/` — frontend
+- `templates/word_search/`, `static/` — frontend
+
+More game types (crossword, sudoku, word scramble) will each get their
+own `games/<type>/` package and blueprint alongside `word_search/`.
 
 Database: defaults to a local `instance/puzzles.db` SQLite file if
 `DATABASE_URL` isn't set. Render provides `DATABASE_URL` automatically
