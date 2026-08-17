@@ -11,15 +11,18 @@ patterns exist before the rest gets layered on.
 
 Word lists come from one of two sources:
 
-- **No API key configured** (default): a built-in word bank covering ~15
-  common themes (animals, ocean, space, sports, food, holidays, etc.),
-  plus a generic fallback for anything else. Works immediately, no setup.
-- **`ANTHROPIC_API_KEY` set in `.env`**: word lists are generated live by
-  Claude for *any* typed theme. Falls back to the offline bank automatically
-  if the API call fails for any reason.
+- **Anonymous, or signed in with no key saved** (default): a built-in
+  word bank covering ~15 common themes (animals, ocean, space, sports,
+  food, holidays, etc.), plus a generic fallback for anything else. Works
+  immediately, no setup, no cost to anyone.
+- **Signed in with Google + an Anthropic API key saved in Account**: word
+  lists are generated live by Claude for *any* typed theme, billed to
+  *that user's own key* (stored encrypted, never the site owner's).
+  Falls back to the offline bank automatically if the API call fails.
 
 The UI shows a small note whenever a puzzle used the offline bank instead
-of live generation.
+of live generation. Only signed-in users with a saved key can trigger a
+paid LLM call — anonymous visitors always get the offline path.
 
 ## Setup
 
@@ -31,11 +34,36 @@ set FLASK_APP=app.py
 flask db upgrade            # creates instance/puzzles.db (sqlite) locally
 ```
 
-Optional, for AI-generated word lists on any theme:
+Copy `.env.example` to `.env` and fill in secrets as needed — see below
+for what each one is for. `SECRET_KEY` and `APP_ENCRYPTION_KEY` need real
+values even locally (Flask sessions and API-key encryption both require
+them); the rest are optional depending on what you're testing.
 
-```
-copy .env.example .env      # then fill in ANTHROPIC_API_KEY
-```
+## Google sign-in setup
+
+Sign-in and per-user API keys need a Google OAuth client:
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → APIs &
+   Services → Credentials → **Create Credentials → OAuth client ID** →
+   Application type **Web application**.
+2. Add these as **Authorized redirect URIs**:
+   - `http://127.0.0.1:5000/auth/callback` (local dev)
+   - `https://<your-render-url>/auth/callback` (production)
+3. Copy the Client ID and Client Secret into `GOOGLE_CLIENT_ID` /
+   `GOOGLE_CLIENT_SECRET` in `.env` (locally) and into the Render
+   dashboard's env vars (production — `render.yaml` marks these
+   `sync: false` so Render prompts for them rather than reading from git).
+4. Generate an encryption key for stored API keys and put it in
+   `APP_ENCRYPTION_KEY` (again: `.env` locally, Render dashboard in prod):
+   ```
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
+   Losing this key makes every already-stored user API key permanently
+   undecryptable — it's not something to regenerate casually once real
+   users have saved keys.
+
+Without Google credentials configured, the app still runs fine — sign-in
+just won't work, and everyone gets the offline word bank.
 
 ## Run
 
@@ -53,11 +81,15 @@ Then open http://127.0.0.1:5000
 - `games/word_search/` — the word search game: `generator.py` (grid
   placement, pure Python, no deps), `pdf_export.py` (reportlab), and
   `routes.py` (the `/`, `/generate`, `/download/<id>.pdf` blueprint)
-- `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate
-  instances, and the `Puzzle` model (persists generated puzzles so PDF
-  download never needs to re-run the LLM call, and survives restarts)
+- `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate/
+  Flask-Login/Authlib instances, and the `User`/`ApiKey`/`Puzzle` models
+- `crypto.py` — Fernet encrypt/decrypt for stored per-user API keys
+- `auth/` — Google OAuth login/callback/logout (`/auth/...`)
+- `account/` — view/save/remove your own API key (`/account`)
 - `migrations/` — Alembic migration scripts (`flask db migrate` / `upgrade`)
-- `templates/word_search/`, `static/` — frontend
+- `templates/base.html` — shared layout + nav (login state); per-game and
+  per-feature templates extend it
+- `static/` — shared frontend assets
 
 More game types (crossword, sudoku, word scramble) will each get their
 own `games/<type>/` package and blueprint alongside `word_search/`.
@@ -78,9 +110,11 @@ service tier:
 3. Render also reads the `databases:` block and provisions a free
    Postgres instance, wiring its connection string into the web
    service's `DATABASE_URL` automatically — no manual step needed there.
-4. Render prompts you for the one secret it doesn't get from git:
-   `ANTHROPIC_API_KEY`. Paste it in (optional — the app works fine
-   without it, using the offline word bank).
+4. Render prompts you for the secrets it doesn't get from git:
+   `ANTHROPIC_API_KEY` (optional — offline bank works without it),
+   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (needed for sign-in to
+   work — see Google sign-in setup above), and `APP_ENCRYPTION_KEY`
+   (needed before any user can save an API key).
 5. Deploy. Render builds with
    `pip install -r requirements.txt && flask db upgrade` (applying any
    pending migrations) and runs
@@ -100,8 +134,9 @@ Notes:
 
 ## Notes / next steps
 
-- Each `/generate` call costs a small amount against the Anthropic API key —
-  worth adding rate limiting before making this public.
+- No rate limiting yet on `/generate` — no longer a cost concern (each
+  user spends their own key's budget), but still worth adding as a
+  compute/abuse guard before this is public.
 - KDP/Etsy book angle: PDF export is per-puzzle today; a batch mode that
   generates N puzzles across a theme list into one bound PDF would be the
   next step for turning this into a sellable puzzle book.

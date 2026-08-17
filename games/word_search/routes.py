@@ -1,10 +1,12 @@
 import os
 import tempfile
 
-from flask import Blueprint, after_this_request, jsonify, render_template, request, send_file
+from flask import Blueprint, after_this_request, current_app, jsonify, render_template, request, send_file
+from flask_login import current_user
 
+from crypto import decrypt_api_key
 from extensions import db
-from models import Puzzle
+from models import ApiKey, Puzzle
 from games.word_search.generator import WordSearchPuzzle
 from games.word_search.pdf_export import export_pdf
 from games.wordlists import get_word_list
@@ -12,9 +14,25 @@ from games.wordlists import get_word_list
 word_search_bp = Blueprint("word_search", __name__)
 
 
+def _resolve_api_key():
+    if current_user.is_authenticated:
+        row = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first()
+        if row:
+            return decrypt_api_key(row.encrypted_key)
+        return None
+    # Dev-only convenience: never active under gunicorn/production (app.debug
+    # is only ever True via `python app.py`'s explicit debug=True).
+    if current_app.debug:
+        return os.environ.get("ANTHROPIC_API_KEY")
+    return None
+
+
 @word_search_bp.route("/")
 def index():
-    return render_template("word_search/index.html")
+    has_api_key = False
+    if current_user.is_authenticated:
+        has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
+    return render_template("word_search/index.html", has_api_key=has_api_key)
 
 
 @word_search_bp.route("/generate", methods=["POST"])
@@ -29,11 +47,13 @@ def generate():
     size = max(8, min(25, size))
     count = max(5, min(20, count))
 
-    words, source = get_word_list(theme, count=count)
+    api_key = _resolve_api_key()
+    words, source = get_word_list(theme, count=count, api_key=api_key)
 
     puzzle = WordSearchPuzzle(words, size=size)
 
     row = Puzzle(
+        user_id=current_user.id if current_user.is_authenticated else None,
         game_type="word_search",
         theme=theme,
         params={"size": size, "count": count},

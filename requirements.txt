@@ -6,3 +6,7 @@ gunicorn
 flask-sqlalchemy
 flask-migrate
 psycopg2-binary
+flask-login
+authlib
+requests
+cryptography

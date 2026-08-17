@@ -1,32 +1,28 @@
 """LLM-backed theme word list generation via the Anthropic API."""
+from __future__ import annotations
+
 import json
 import os
 import re
 
-import anthropic
-
+from games.llm_client import get_client
 from games.offline_words import get_offline_word_list
 
 DEFAULT_MODEL = os.environ.get("WORDSEARCH_MODEL", "claude-haiku-4-5-20251001")
-
-_client = None
-
-
-def _get_client():
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic()
-    return _client
 
 
 class ThemeGenerationError(RuntimeError):
     pass
 
 
-def generate_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
+def generate_word_list(theme: str, api_key: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
     theme = theme.strip()
     if not theme:
         raise ValueError("theme must not be empty")
+
+    client = get_client(api_key)
+    if client is None:
+        raise ThemeGenerationError("No API key available")
 
     prompt = (
         f'Generate exactly {count} words for a word search puzzle themed "{theme}".\n\n'
@@ -38,7 +34,7 @@ def generate_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: i
         'Example: ["APPLE", "BANANA"]'
     )
 
-    resp = _get_client().messages.create(
+    resp = client.messages.create(
         model=DEFAULT_MODEL,
         max_tokens=500,
         messages=[{"role": "user", "content": prompt}],
@@ -68,15 +64,15 @@ def generate_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: i
     return cleaned[:count]
 
 
-def get_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> tuple[list[str], str]:
+def get_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10, api_key: str | None = None) -> tuple[list[str], str]:
     """Return (words, source) where source is "llm" or "offline".
 
-    Uses the live Anthropic API when ANTHROPIC_API_KEY is set, falling back
-    to the built-in word banks if no key is configured or the API call fails.
+    Uses the live Anthropic API when api_key is provided, falling back to
+    the built-in word banks if no key is given or the API call fails.
     """
-    if os.environ.get("ANTHROPIC_API_KEY"):
+    if api_key:
         try:
-            return generate_word_list(theme, count=count, min_len=min_len, max_len=max_len), "llm"
+            return generate_word_list(theme, api_key, count=count, min_len=min_len, max_len=max_len), "llm"
         except Exception:
             pass
     return get_offline_word_list(theme, count=count, min_len=min_len, max_len=max_len), "offline"

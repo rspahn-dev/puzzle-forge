@@ -47,10 +47,87 @@ body {
     var(--bg);
 }
 
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0;
+  font-size: 0.9rem;
+}
+.site-logo {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 1.05rem;
+}
+.site-nav-links { display: flex; align-items: center; gap: 1rem; }
+.site-nav-links a { color: var(--fg); text-decoration: none; }
+.site-nav-links a:hover { color: var(--accent); }
+
+.link-button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-button:hover { color: var(--accent); transform: none; }
+
+.danger-button {
+  background: none;
+  border: 1px solid color-mix(in srgb, #c0392b 45%, var(--border));
+  color: #c0392b;
+  box-shadow: none;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+}
+.danger-button:hover { background: color-mix(in srgb, #c0392b 10%, transparent); transform: none; }
+
+.inline-form { display: inline; }
+
+.ai-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.65rem 0.9rem;
+  margin: -1rem 0 1.5rem;
+}
+.ai-note a { color: var(--accent); font-weight: 600; }
+
+.flash-messages { margin-bottom: 1.5rem; }
+.flash {
+  font-size: 0.85rem;
+  background: var(--highlight);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin: 0 0 0.5rem;
+}
+.flash-error {
+  background: color-mix(in srgb, #c0392b 14%, transparent);
+  border: 1px solid color-mix(in srgb, #c0392b 35%, transparent);
+}
+
+code {
+  font-family: "JetBrains Mono", monospace;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+}
+
 main {
   max-width: 780px;
   margin: 0 auto;
-  padding: 3rem 1.25rem 5rem;
+  padding: 1.5rem 1.25rem 5rem;
 }
 
 .page-header {
