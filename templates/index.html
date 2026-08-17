@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word Search Generator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔎</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="backdrop"></div>
+  <main>
+    <header class="page-header">
+      <span class="logo-badge">🔎</span>
+      <div>
+        <h1>Word Search Generator</h1>
+        <p class="subtitle">Type any theme — the word list is generated for you.</p>
+      </div>
+    </header>
+
+    <form id="puzzle-form" class="card">
+      <div class="field">
+        <label for="theme">Theme</label>
+        <input id="theme" name="theme" type="text" placeholder="e.g. Deep Sea Creatures" autocomplete="off" required>
+        <div class="chip-row" id="theme-chips">
+          <span class="chip-label">Need an idea?</span>
+          <button type="button" class="chip" data-theme="Ocean Life">🌊 Ocean Life</button>
+          <button type="button" class="chip" data-theme="Outer Space">🚀 Outer Space</button>
+          <button type="button" class="chip" data-theme="Dinosaurs">🦖 Dinosaurs</button>
+          <button type="button" class="chip" data-theme="Halloween">🎃 Halloween</button>
+          <button type="button" class="chip" data-theme="Sports">⚽ Sports</button>
+          <button type="button" class="chip" data-theme="Animals">🐾 Animals</button>
+          <button type="button" class="chip" data-theme="Music">🎵 Music</button>
+          <button type="button" class="chip" data-theme="Christmas">🎄 Christmas</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="size">Grid size</label>
+          <select id="size" name="size">
+            <option value="10">10 × 10 · easy</option>
+            <option value="15" selected>15 × 15 · medium</option>
+            <option value="20">20 × 20 · hard</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="count">Word count</label>
+          <select id="count" name="count">
+            <option value="8">8 words</option>
+            <option value="12" selected>12 words</option>
+            <option value="16">16 words</option>
+            <option value="20">20 words</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="generate-btn">
+        <span class="btn-label">✨ Generate puzzle</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+    </form>
+
+    <section class="gallery-section">
+      <h2 class="gallery-title">Or jump straight into a sample puzzle</h2>
+      <div class="gallery" id="sample-gallery">
+        <button type="button" class="sample-card" data-theme="Ocean Life" data-size="10" data-count="8">
+          <span class="sample-icon">🌊</span>
+          <span class="sample-name">Ocean Life</span>
+          <span class="sample-meta">10×10 · easy</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Outer Space" data-size="15" data-count="12">
+          <span class="sample-icon">🚀</span>
+          <span class="sample-name">Outer Space</span>
+          <span class="sample-meta">15×15 · medium</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Dinosaurs" data-size="15" data-count="12">
+          <span class="sample-icon">🦖</span>
+          <span class="sample-name">Dinosaurs</span>
+          <span class="sample-meta">15×15 · medium</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Halloween" data-size="20" data-count="16">
+          <span class="sample-icon">🎃</span>
+          <span class="sample-name">Halloween</span>
+          <span class="sample-meta">20×20 · hard</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Sports" data-size="10" data-count="8">
+          <span class="sample-icon">⚽</span>
+          <span class="sample-name">Sports</span>
+          <span class="sample-meta">10×10 · easy</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Christmas" data-size="15" data-count="12">
+          <span class="sample-icon">🎄</span>
+          <span class="sample-name">Christmas</span>
+          <span class="sample-meta">15×15 · medium</span>
+        </button>
+      </div>
+    </section>
+
+    <p id="status" role="status"></p>
+
+    <section id="result" class="card" hidden>
+      <div class="result-head">
+        <h2 id="result-title"></h2>
+        <a id="download-link" href="#">⬇ Download PDF</a>
+      </div>
+      <p id="source-note" hidden></p>
+      <div class="puzzle-layout">
+        <div class="grid-wrap">
+          <table id="grid"></table>
+        </div>
+        <div class="words-panel">
+          <h3>Find these words</h3>
+          <p class="hint">Click a word once you've spotted it.</p>
+          <ul id="word-list"></ul>
+          <p id="skipped-note" hidden></p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+flask
+anthropic
+reportlab
+python-dotenv
+gunicorn
