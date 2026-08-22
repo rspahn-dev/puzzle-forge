@@ -1,9 +1,3 @@
-databases:
-  - name: puzzle-forge-db
-    plan: free
-    databaseName: puzzle_forge
-    user: puzzle_forge
-
 services:
   - type: web
     name: puzzle-forge
@@ -25,6 +19,4 @@ services:
       - key: APP_ENCRYPTION_KEY
         sync: false
       - key: DATABASE_URL
-        fromDatabase:
-          name: puzzle-forge-db
-          property: connectionString
+        sync: false
