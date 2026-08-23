@@ -5,7 +5,7 @@ from flask import Blueprint, after_this_request, current_app, jsonify, render_te
 from flask_login import current_user
 
 from crypto import decrypt_api_key
-from extensions import db
+from extensions import db, limiter
 from models import ApiKey, Puzzle
 from games.word_scramble.generator import WordScramblePuzzle
 from games.word_scramble.pdf_export import export_pdf
@@ -36,6 +36,7 @@ def index():
 
 
 @word_scramble_bp.route("/generate", methods=["POST"])
+@limiter.limit("20 per hour")
 def generate():
     data = request.get_json(force=True) or {}
     theme = (data.get("theme") or "").strip()
@@ -72,6 +73,7 @@ def generate():
 
 
 @word_scramble_bp.route("/download/<puzzle_id>.pdf")
+@limiter.limit("40 per hour")
 def download(puzzle_id):
     row = Puzzle.query.get(puzzle_id)
     if row is None or row.game_type != "word_scramble":

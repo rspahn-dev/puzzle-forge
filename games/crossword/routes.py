@@ -5,7 +5,7 @@ from flask import Blueprint, after_this_request, current_app, jsonify, render_te
 from flask_login import current_user
 
 from crypto import decrypt_api_key
-from extensions import db
+from extensions import db, limiter
 from models import ApiKey, Puzzle
 from games.crossword.clues import get_clues
 from games.crossword.generator import build_best
@@ -37,6 +37,7 @@ def index():
 
 
 @crossword_bp.route("/generate", methods=["POST"])
+@limiter.limit("15 per hour")
 def generate():
     data = request.get_json(force=True) or {}
     theme = (data.get("theme") or "").strip()
@@ -80,6 +81,7 @@ def generate():
 
 
 @crossword_bp.route("/download/<puzzle_id>.pdf")
+@limiter.limit("40 per hour")
 def download(puzzle_id):
     row = Puzzle.query.get(puzzle_id)
     if row is None or row.game_type != "crossword":

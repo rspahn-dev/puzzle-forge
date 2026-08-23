@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Batch / Book Mode — Puzzle Forge{% endblock %}
+{% block content %}
+    <header class="page-header">
+      <span class="logo-badge">📚</span>
+      <div>
+        <h1>Batch / Book Mode</h1>
+        <p class="subtitle">Generate several puzzles at once into one print-ready PDF — puzzles first, answer key at the end.</p>
+      </div>
+    </header>
+
+    {% if not current_user.is_authenticated %}
+    <p class="ai-note">
+      Browsing anonymously — themed puzzles use the built-in word bank.
+      <a href="{{ url_for('auth.login') }}">Sign in with Google</a> and add your own
+      Anthropic API key in Account to generate live AI word lists per theme.
+    </p>
+    {% elif not has_api_key %}
+    <p class="ai-note">
+      You're signed in, but haven't added an API key yet — themed puzzles use the
+      built-in word bank. Add one in
+      <a href="{{ url_for('account.index') }}">Account</a> for live AI word
+      lists on any theme.
+    </p>
+    {% endif %}
+
+    <form id="batch-form" class="card">
+      <div class="field">
+        <label for="game-type">Puzzle type</label>
+        <select id="game-type" name="game_type">
+          <option value="word_search">Word Search</option>
+          <option value="word_scramble">Word Scramble</option>
+          <option value="crossword">Crossword</option>
+          <option value="sudoku">Sudoku</option>
+        </select>
+      </div>
+
+      <div data-game-fields="word_search,word_scramble,crossword" class="active">
+        <div class="field">
+          <label for="themes">Themes (one per line, up to 20 — one puzzle per theme)</label>
+          <textarea id="themes" name="themes" placeholder="Ocean Life&#10;Outer Space&#10;Dinosaurs&#10;Halloween"></textarea>
+        </div>
+        <div class="row">
+          <div class="field" data-game-fields="word_search">
+            <label for="size">Grid size</label>
+            <select id="size" name="size">
+              <option value="10">10 × 10 · easy</option>
+              <option value="15" selected>15 × 15 · medium</option>
+              <option value="20">20 × 20 · hard</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="count">Words per puzzle</label>
+            <select id="count" name="count">
+              <option value="8">8 words</option>
+              <option value="12" selected>12 words</option>
+              <option value="16">16 words</option>
+              <option value="20">20 words</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div data-game-fields="sudoku">
+        <div class="row">
+          <div class="field">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty" name="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sudoku-count">Number of puzzles</label>
+            <select id="sudoku-count" name="sudoku_count">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="generate-btn">
+        <span class="btn-label">📚 Generate book PDF</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+      <p class="field-hint">Batch generation is capped at 5 books per hour — it's heavier than a single puzzle.</p>
+    </form>
+
+    <p id="status" role="status"></p>
+    <p id="skipped-note" class="skipped-note" hidden></p>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='batch.js') }}"></script>
+{% endblock %}

@@ -6,6 +6,10 @@ algorithm), word scramble (jumbled letters to unscramble), crossword
 (interlocking grid with clues), and sudoku (generated with a
 guaranteed unique solution). All four can be played on-screen or
 downloaded as a print-ready PDF (puzzle page + answer key page).
+Batch/Book mode generates several puzzles of one type at once — a
+theme list (or a difficulty + count for sudoku) — into a single PDF:
+all puzzle pages up front, an answer-key section at the end. That's
+the KDP/Etsy puzzle-book workflow.
 
 This is growing into a multi-game puzzle platform with user accounts
 and per-user API keys already in — word search was the first game
@@ -95,8 +99,17 @@ Then open http://127.0.0.1:5000
   backtracking fill + uniqueness-checked cell removal, pure Python, no
   deps), `pdf_export.py`, and `routes.py` (mounted under `/sudoku`).
   No theme or word list involved — `difficulty` is the only input.
+- `games/batch/` — batch/book mode (`routes.py`, mounted under `/batch`):
+  takes a game type plus a theme list (or difficulty + count for sudoku),
+  generates each puzzle in-process using the same generators/word-list
+  pipeline as the single-puzzle routes, and streams back one combined PDF
+  via each game's `export_batch_pdf()`. Nothing is persisted to the
+  `Puzzle` table — the book is built and returned in one request, so
+  there's no separate download step to re-fetch it later.
+- `games/pdf_common.py` — shared batch-PDF helper (`draw_cover_page`)
+  used by each game's `export_batch_pdf()`.
 - `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate/
-  Flask-Login/Authlib instances, and the `User`/`ApiKey`/`Puzzle` models
+  Flask-Login/Authlib/Flask-Limiter instances, and the `User`/`ApiKey`/`Puzzle` models
 - `crypto.py` — Fernet encrypt/decrypt for stored per-user API keys
 - `auth/` — Google OAuth login/callback/logout (`/auth/...`)
 - `account/` — view/save/remove your own API key (`/account`)
@@ -143,11 +156,25 @@ Notes:
   session-heavy features) haven't been load-tested beyond a single
   worker yet.
 
+## Rate limiting
+
+Flask-Limiter guards every `/generate`, `/download/<id>.pdf`, and
+`/batch/generate` route, keyed by IP. Storage is in-memory
+(`RATELIMIT_STORAGE_URI`, defaults to `memory://`) — that's only correct
+as long as the app stays a single process, which matches the existing
+`--workers 1` choice; move to a shared backend (e.g. Redis) before
+scaling past one worker, or the counts will fragment per-process. A 429
+returns `{"error": "..."}` so the existing frontend fetch/`.error`
+handling degrades gracefully instead of breaking on a non-JSON body.
+
+Limits: 20/hour on themed `/generate` (word search, word scramble),
+15/hour on crossword `/generate` (two LLM calls per puzzle), 60/hour on
+sudoku `/generate` (no LLM cost, still a compute guard), 40/hour on all
+`/download`, and 5/hour on `/batch/generate` (heaviest — generates
+several puzzles per request).
+
 ## Notes / next steps
 
-- No rate limiting yet on `/generate` — no longer a cost concern (each
-  user spends their own key's budget), but still worth adding as a
-  compute/abuse guard before this is public.
-- KDP/Etsy book angle: PDF export is per-puzzle today; a batch mode that
-  generates N puzzles across a theme list into one bound PDF would be the
-  next step for turning this into a sellable puzzle book.
+- Puzzle history/library page — `Puzzle` rows are already saved per
+  signed-in user, just no UI to browse past puzzles yet.
+- Difficulty levels for word search/crossword (sudoku already has this).

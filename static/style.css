@@ -201,7 +201,7 @@ form.card {
 .field { display: flex; flex-direction: column; }
 label { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em; }
 
-input, select {
+input, select, textarea {
   width: 100%;
   padding: 0.65rem 0.8rem;
   border: 1px solid var(--border);
@@ -212,11 +212,25 @@ input, select {
   font-family: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-input:hover, select:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
-input:focus, select:focus {
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+textarea { resize: vertical; min-height: 7rem; font-family: "JetBrains Mono", monospace; font-size: 0.9rem; }
+
+.field-hint { color: var(--muted); font-size: 0.78rem; margin: 0.35rem 0 0; }
+[data-game-fields] { display: none; }
+[data-game-fields].active { display: flex; flex-direction: column; gap: 1.1rem; }
+.skipped-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--accent-2) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-2) 35%, transparent);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  margin: 0 0 1rem;
 }
 
 .row { display: flex; gap: 1rem; }
