@@ -1,13 +1,14 @@
 # Puzzle Forge
 
-Currently: type a theme, get a word search puzzle. The grid is placed by
-a local algorithm, and the result can be played on-screen or downloaded
-as a print-ready PDF (puzzle page + answer key page).
+Type a theme, get a puzzle. Two game types live so far: word search
+(grid placed by a local algorithm) and word scramble (jumbled letters
+to unscramble). Both can be played on-screen or downloaded as a
+print-ready PDF (puzzle page + answer key page).
 
 This is growing into a multi-game puzzle platform (crossword, sudoku,
-word scramble, user accounts with per-user API keys) — word search is
-the first game type, built out first so the deploy pipeline and core
-patterns exist before the rest gets layered on.
+user accounts with per-user API keys) — word search was the first game
+type, built out first so the deploy pipeline and core patterns exist;
+word scramble followed the same pattern.
 
 Word lists come from one of two sources:
 
@@ -81,6 +82,8 @@ Then open http://127.0.0.1:5000
 - `games/word_search/` — the word search game: `generator.py` (grid
   placement, pure Python, no deps), `pdf_export.py` (reportlab), and
   `routes.py` (the `/`, `/generate`, `/download/<id>.pdf` blueprint)
+- `games/word_scramble/` — the word scramble game, same shape as
+  `word_search/`, mounted under `/word-scramble`
 - `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate/
   Flask-Login/Authlib instances, and the `User`/`ApiKey`/`Puzzle` models
 - `crypto.py` — Fernet encrypt/decrypt for stored per-user API keys
@@ -91,12 +94,13 @@ Then open http://127.0.0.1:5000
   per-feature templates extend it
 - `static/` — shared frontend assets
 
-More game types (crossword, sudoku, word scramble) will each get their
-own `games/<type>/` package and blueprint alongside `word_search/`.
+More game types (crossword, sudoku) will each get their own
+`games/<type>/` package and blueprint alongside `word_search/` and
+`word_scramble/`.
 
 Database: defaults to a local `instance/puzzles.db` SQLite file if
-`DATABASE_URL` isn't set. Render provides `DATABASE_URL` automatically
-from the attached Postgres instance in production.
+`DATABASE_URL` isn't set. In production it points at a Supabase Postgres
+project (see `.env.example` for the connection-string gotchas).
 
 ## Deploy (Render)
 
@@ -107,14 +111,14 @@ service tier:
    `rspahn-dev/puzzle-forge`).
 2. In the [Render dashboard](https://dashboard.render.com), choose
    **New → Blueprint** and select the `puzzle-forge` repo.
-3. Render also reads the `databases:` block and provisions a free
-   Postgres instance, wiring its connection string into the web
-   service's `DATABASE_URL` automatically — no manual step needed there.
-4. Render prompts you for the secrets it doesn't get from git:
+3. Render prompts you for the secrets it doesn't get from git:
    `ANTHROPIC_API_KEY` (optional — offline bank works without it),
    `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (needed for sign-in to
-   work — see Google sign-in setup above), and `APP_ENCRYPTION_KEY`
-   (needed before any user can save an API key).
+   work — see Google sign-in setup above), `APP_ENCRYPTION_KEY`
+   (needed before any user can save an API key), and `DATABASE_URL`
+   (a Supabase Postgres **session pooler** connection string — see
+   `.env.example`; Supabase's direct connection is IPv6-only and won't
+   reach Render's free IPv4 tier).
 5. Deploy. Render builds with
    `pip install -r requirements.txt && flask db upgrade` (applying any
    pending migrations) and runs
@@ -125,9 +129,6 @@ Notes:
 - Free tier spins down after ~15 min idle; the next request takes ~30s to
   wake it back up. Fine for low-traffic use; upgrade to a paid plan later
   for always-on if needed.
-- Render's free Postgres instances expire after 90 days and need
-  recreating (or upgrading to a paid plan) — a known limitation of the
-  free tier, not something this app can work around.
 - `--workers 1` is a deliberate choice for now — future phases (auth,
   session-heavy features) haven't been load-tested beyond a single
   worker yet.

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Word Scramble — Puzzle Forge{% endblock %}
+{% block content %}
+    <header class="page-header">
+      <span class="logo-badge">🔀</span>
+      <div>
+        <h1>Word Scramble</h1>
+        <p class="subtitle">Type any theme — unscramble the jumbled words.</p>
+      </div>
+    </header>
+
+    {% if not current_user.is_authenticated %}
+    <p class="ai-note">
+      Browsing anonymously — puzzles use the built-in word bank.
+      <a href="{{ url_for('auth.login') }}">Sign in with Google</a> and add your own
+      Anthropic API key in Account to generate live AI word lists for any theme.
+    </p>
+    {% elif not has_api_key %}
+    <p class="ai-note">
+      You're signed in, but haven't added an API key yet — puzzles use the
+      built-in word bank. Add one in
+      <a href="{{ url_for('account.index') }}">Account</a> for live AI word
+      lists on any theme.
+    </p>
+    {% endif %}
+
+    <form id="puzzle-form" class="card">
+      <div class="field">
+        <label for="theme">Theme</label>
+        <input id="theme" name="theme" type="text" placeholder="e.g. Deep Sea Creatures" autocomplete="off" required>
+        <div class="chip-row" id="theme-chips">
+          <span class="chip-label">Need an idea?</span>
+          <button type="button" class="chip" data-theme="Ocean Life">🌊 Ocean Life</button>
+          <button type="button" class="chip" data-theme="Outer Space">🚀 Outer Space</button>
+          <button type="button" class="chip" data-theme="Dinosaurs">🦖 Dinosaurs</button>
+          <button type="button" class="chip" data-theme="Halloween">🎃 Halloween</button>
+          <button type="button" class="chip" data-theme="Sports">⚽ Sports</button>
+          <button type="button" class="chip" data-theme="Animals">🐾 Animals</button>
+          <button type="button" class="chip" data-theme="Music">🎵 Music</button>
+          <button type="button" class="chip" data-theme="Christmas">🎄 Christmas</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty" name="difficulty">
+            <option value="3,5">Easy · 3-5 letters</option>
+            <option value="4,8" selected>Medium · 4-8 letters</option>
+            <option value="6,10">Hard · 6-10 letters</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="count">Word count</label>
+          <select id="count" name="count">
+            <option value="6">6 words</option>
+            <option value="10" selected>10 words</option>
+            <option value="14">14 words</option>
+            <option value="20">20 words</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="generate-btn">
+        <span class="btn-label">✨ Generate puzzle</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+    </form>
+
+    <section class="gallery-section">
+      <h2 class="gallery-title">Or jump straight into a sample puzzle</h2>
+      <div class="gallery" id="sample-gallery">
+        <button type="button" class="sample-card" data-theme="Ocean Life" data-min="3" data-max="5" data-count="6">
+          <span class="sample-icon">🌊</span>
+          <span class="sample-name">Ocean Life</span>
+          <span class="sample-meta">easy</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Outer Space" data-min="4" data-max="8" data-count="10">
+          <span class="sample-icon">🚀</span>
+          <span class="sample-name">Outer Space</span>
+          <span class="sample-meta">medium</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Dinosaurs" data-min="4" data-max="8" data-count="10">
+          <span class="sample-icon">🦖</span>
+          <span class="sample-name">Dinosaurs</span>
+          <span class="sample-meta">medium</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Halloween" data-min="6" data-max="10" data-count="14">
+          <span class="sample-icon">🎃</span>
+          <span class="sample-name">Halloween</span>
+          <span class="sample-meta">hard</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Sports" data-min="3" data-max="5" data-count="6">
+          <span class="sample-icon">⚽</span>
+          <span class="sample-name">Sports</span>
+          <span class="sample-meta">easy</span>
+        </button>
+        <button type="button" class="sample-card" data-theme="Christmas" data-min="4" data-max="8" data-count="10">
+          <span class="sample-icon">🎄</span>
+          <span class="sample-name">Christmas</span>
+          <span class="sample-meta">medium</span>
+        </button>
+      </div>
+    </section>
+
+    <p id="status" role="status"></p>
+
+    <section id="result" class="card" hidden>
+      <div class="result-head">
+        <h2 id="result-title"></h2>
+        <a id="download-link" href="#">⬇ Download PDF</a>
+      </div>
+      <p id="source-note" hidden></p>
+      <ol id="scramble-list" class="scramble-list"></ol>
+      <div class="scramble-actions">
+        <button type="button" id="check-btn">Check answers</button>
+        <button type="button" id="reveal-btn" class="secondary-button">Reveal all</button>
+      </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='word_scramble.js') }}"></script>
+{% endblock %}

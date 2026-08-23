@@ -7,11 +7,11 @@ from flask_login import current_user
 from crypto import decrypt_api_key
 from extensions import db
 from models import ApiKey, Puzzle
-from games.word_search.generator import WordSearchPuzzle
-from games.word_search.pdf_export import export_pdf
+from games.word_scramble.generator import WordScramblePuzzle
+from games.word_scramble.pdf_export import export_pdf
 from games.wordlists import get_word_list
 
-word_search_bp = Blueprint("word_search", __name__)
+word_scramble_bp = Blueprint("word_scramble", __name__, url_prefix="/word-scramble")
 
 
 def _resolve_api_key():
@@ -27,36 +27,38 @@ def _resolve_api_key():
     return None
 
 
-@word_search_bp.route("/")
+@word_scramble_bp.route("/")
 def index():
     has_api_key = False
     if current_user.is_authenticated:
         has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
-    return render_template("word_search/index.html", has_api_key=has_api_key)
+    return render_template("word_scramble/index.html", has_api_key=has_api_key)
 
 
-@word_search_bp.route("/generate", methods=["POST"])
+@word_scramble_bp.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json(force=True) or {}
     theme = (data.get("theme") or "").strip()
-    size = int(data.get("size", 15))
-    count = int(data.get("count", 12))
+    count = int(data.get("count", 10))
+    min_len = int(data.get("min_len", 4))
+    max_len = int(data.get("max_len", 8))
 
     if not theme:
         return jsonify({"error": "Please enter a theme."}), 400
-    size = max(8, min(25, size))
     count = max(5, min(20, count))
+    min_len = max(3, min(10, min_len))
+    max_len = max(min_len, min(12, max_len))
 
     api_key = _resolve_api_key()
-    words, source = get_word_list(theme, count=count, api_key=api_key)
+    words, source = get_word_list(theme, count=count, min_len=min_len, max_len=max_len, api_key=api_key)
 
-    puzzle = WordSearchPuzzle(words, size=size)
+    puzzle = WordScramblePuzzle(words)
 
     row = Puzzle(
         user_id=current_user.id if current_user.is_authenticated else None,
-        game_type="word_search",
+        game_type="word_scramble",
         theme=theme,
-        params={"size": size, "count": count},
+        params={"count": count, "min_len": min_len, "max_len": max_len},
         data=puzzle.to_storage_dict(),
         source=source,
     )
@@ -69,12 +71,12 @@ def generate():
     return jsonify(result)
 
 
-@word_search_bp.route("/download/<puzzle_id>.pdf")
+@word_scramble_bp.route("/download/<puzzle_id>.pdf")
 def download(puzzle_id):
     row = Puzzle.query.get(puzzle_id)
-    if row is None or row.game_type != "word_search":
+    if row is None or row.game_type != "word_scramble":
         return "Puzzle not found — generate a new one.", 404
-    puzzle = WordSearchPuzzle.from_placements(**row.data)
+    puzzle = WordScramblePuzzle.from_items(row.data["items"])
     theme = row.theme
 
     fd, path = tempfile.mkstemp(suffix=".pdf")
@@ -90,4 +92,4 @@ def download(puzzle_id):
         return response
 
     safe_theme = "".join(ch if ch.isalnum() else "_" for ch in theme.lower())
-    return send_file(path, as_attachment=True, download_name=f"word_search_{safe_theme}.pdf")
+    return send_file(path, as_attachment=True, download_name=f"word_scramble_{safe_theme}.pdf")
