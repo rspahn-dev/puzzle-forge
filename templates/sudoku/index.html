@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Sudoku — Puzzle Forge{% endblock %}
+{% block content %}
+    <header class="page-header">
+      <span class="logo-badge">🔢</span>
+      <div>
+        <h1>Sudoku</h1>
+        <p class="subtitle">Pick a difficulty — every puzzle has exactly one solution.</p>
+      </div>
+    </header>
+
+    <form id="puzzle-form" class="card">
+      <div class="field">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty" name="difficulty">
+          <option value="easy">Easy · 42 givens</option>
+          <option value="medium" selected>Medium · 32 givens</option>
+          <option value="hard">Hard · 26 givens</option>
+        </select>
+      </div>
+
+      <button type="submit" id="generate-btn">
+        <span class="btn-label">✨ Generate puzzle</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+    </form>
+
+    <section class="gallery-section">
+      <h2 class="gallery-title">Or jump straight in</h2>
+      <div class="gallery" id="sample-gallery">
+        <button type="button" class="sample-card" data-difficulty="easy">
+          <span class="sample-icon">🟢</span>
+          <span class="sample-name">Easy</span>
+          <span class="sample-meta">42 givens</span>
+        </button>
+        <button type="button" class="sample-card" data-difficulty="medium">
+          <span class="sample-icon">🟡</span>
+          <span class="sample-name">Medium</span>
+          <span class="sample-meta">32 givens</span>
+        </button>
+        <button type="button" class="sample-card" data-difficulty="hard">
+          <span class="sample-icon">🔴</span>
+          <span class="sample-name">Hard</span>
+          <span class="sample-meta">26 givens</span>
+        </button>
+      </div>
+    </section>
+
+    <p id="status" role="status"></p>
+
+    <section id="result" class="card" hidden>
+      <div class="result-head">
+        <h2 id="result-title"></h2>
+        <a id="download-link" href="#">⬇ Download PDF</a>
+      </div>
+      <div class="grid-wrap sudoku-grid-wrap">
+        <table id="sudoku-grid"></table>
+      </div>
+      <div class="scramble-actions">
+        <button type="button" id="check-btn">Check answers</button>
+        <button type="button" id="reveal-btn" class="secondary-button">Reveal all</button>
+      </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='sudoku.js') }}"></script>
+{% endblock %}
