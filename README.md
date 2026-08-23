@@ -1,15 +1,18 @@
 # Puzzle Forge
 
-Type a theme, get a puzzle. Three game types live so far: word search
-(grid placed by a local algorithm), word scramble (jumbled letters to
-unscramble), and crossword (interlocking grid with clues). All three
-can be played on-screen or downloaded as a print-ready PDF (puzzle
-page + answer key page).
+Type a theme, get a puzzle — or for sudoku, just pick a difficulty.
+Four game types live so far: word search (grid placed by a local
+algorithm), word scramble (jumbled letters to unscramble), crossword
+(interlocking grid with clues), and sudoku (generated with a
+guaranteed unique solution). All four can be played on-screen or
+downloaded as a print-ready PDF (puzzle page + answer key page).
 
-This is growing into a multi-game puzzle platform (sudoku next, user
-accounts with per-user API keys already in) — word search was the
-first game type, built out first so the deploy pipeline and core
-patterns exist; word scramble and crossword followed the same pattern.
+This is growing into a multi-game puzzle platform with user accounts
+and per-user API keys already in — word search was the first game
+type, built out first so the deploy pipeline and core patterns exist;
+word scramble and crossword followed the same pattern. Sudoku doesn't
+use the theme/word-list pipeline at all — it's pure local grid
+generation, no LLM involved.
 
 Word lists come from one of two sources:
 
@@ -88,6 +91,10 @@ Then open http://127.0.0.1:5000
 - `games/crossword/` — the crossword game, same shape as the others
   (`generator.py` also does grid placement, plus `clues.py` for
   LLM/offline clue text), mounted under `/crossword`
+- `games/sudoku/` — the sudoku game: `generator.py` (randomized
+  backtracking fill + uniqueness-checked cell removal, pure Python, no
+  deps), `pdf_export.py`, and `routes.py` (mounted under `/sudoku`).
+  No theme or word list involved — `difficulty` is the only input.
 - `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate/
   Flask-Login/Authlib instances, and the `User`/`ApiKey`/`Puzzle` models
 - `crypto.py` — Fernet encrypt/decrypt for stored per-user API keys
@@ -98,9 +105,8 @@ Then open http://127.0.0.1:5000
   per-feature templates extend it
 - `static/` — shared frontend assets
 
-More game types (sudoku) will each get their own `games/<type>/`
-package and blueprint alongside `word_search/`, `word_scramble/`, and
-`crossword/`.
+Four game types now: `word_search/`, `word_scramble/`, `crossword/`,
+and `sudoku/`, each its own `games/<type>/` package and blueprint.
 
 Database: defaults to a local `instance/puzzles.db` SQLite file if
 `DATABASE_URL` isn't set. In production it points at a Supabase Postgres
