@@ -400,6 +400,50 @@ button:disabled { opacity: 0.7; cursor: default; box-shadow: none; }
 }
 #download-link:hover { background: var(--highlight); }
 
+.secondary-button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  box-shadow: none;
+}
+.secondary-button:hover { background: var(--bg-alt); transform: none; }
+
+.scramble-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+.scramble-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.scramble-word {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  min-width: 5.5em;
+}
+.scramble-item .scramble-input { flex: 1; }
+.scramble-item.correct {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.scramble-item.incorrect {
+  border-color: color-mix(in srgb, #c0392b 45%, var(--border));
+  background: color-mix(in srgb, #c0392b 10%, transparent);
+}
+
+.scramble-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
 @media (max-width: 520px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
   .row { flex-direction: column; }

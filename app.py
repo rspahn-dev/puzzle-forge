@@ -35,8 +35,10 @@ def create_app(config_class=Config):
     from account.routes import account_bp
     from auth.routes import auth_bp
     from games.word_search.routes import word_search_bp
+    from games.word_scramble.routes import word_scramble_bp
 
     flask_app.register_blueprint(word_search_bp)
+    flask_app.register_blueprint(word_scramble_bp)
     flask_app.register_blueprint(auth_bp)
     flask_app.register_blueprint(account_bp)
 
