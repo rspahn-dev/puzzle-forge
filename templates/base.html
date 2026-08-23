@@ -13,13 +13,10 @@
 </head>
 <body>
   <div class="backdrop"></div>
-  <nav class="site-nav">
+  <header class="site-header">
+    <div class="site-header-side"></div>
     <a class="site-logo" href="{{ url_for('word_search.index') }}">🧩 Puzzle Forge</a>
-    <div class="site-nav-links">
-      <a href="{{ url_for('word_search.index') }}">Word Search</a>
-      <a href="{{ url_for('word_scramble.index') }}">Word Scramble</a>
-      <a href="{{ url_for('crossword.index') }}">Crossword</a>
-      <a href="{{ url_for('sudoku.index') }}">Sudoku</a>
+    <div class="site-header-side site-header-auth">
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('account.index') }}">{{ current_user.display_name or current_user.email }}</a>
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
@@ -29,6 +26,12 @@
         <a href="{{ url_for('auth.login') }}">Sign in with Google</a>
       {% endif %}
     </div>
+  </header>
+  <nav class="site-subnav">
+    <a href="{{ url_for('word_search.index') }}" class="{{ 'active' if request.endpoint == 'word_search.index' else '' }}">Word Search</a>
+    <a href="{{ url_for('word_scramble.index') }}" class="{{ 'active' if request.endpoint == 'word_scramble.index' else '' }}">Word Scramble</a>
+    <a href="{{ url_for('crossword.index') }}" class="{{ 'active' if request.endpoint == 'crossword.index' else '' }}">Crossword</a>
+    <a href="{{ url_for('sudoku.index') }}" class="{{ 'active' if request.endpoint == 'sudoku.index' else '' }}">Sudoku</a>
   </nav>
   <main>
     {% with messages = get_flashed_messages() %}
