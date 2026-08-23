@@ -1,14 +1,15 @@
 # Puzzle Forge
 
-Type a theme, get a puzzle. Two game types live so far: word search
-(grid placed by a local algorithm) and word scramble (jumbled letters
-to unscramble). Both can be played on-screen or downloaded as a
-print-ready PDF (puzzle page + answer key page).
+Type a theme, get a puzzle. Three game types live so far: word search
+(grid placed by a local algorithm), word scramble (jumbled letters to
+unscramble), and crossword (interlocking grid with clues). All three
+can be played on-screen or downloaded as a print-ready PDF (puzzle
+page + answer key page).
 
-This is growing into a multi-game puzzle platform (crossword, sudoku,
-user accounts with per-user API keys) — word search was the first game
-type, built out first so the deploy pipeline and core patterns exist;
-word scramble followed the same pattern.
+This is growing into a multi-game puzzle platform (sudoku next, user
+accounts with per-user API keys already in) — word search was the
+first game type, built out first so the deploy pipeline and core
+patterns exist; word scramble and crossword followed the same pattern.
 
 Word lists come from one of two sources:
 
@@ -84,6 +85,9 @@ Then open http://127.0.0.1:5000
   `routes.py` (the `/`, `/generate`, `/download/<id>.pdf` blueprint)
 - `games/word_scramble/` — the word scramble game, same shape as
   `word_search/`, mounted under `/word-scramble`
+- `games/crossword/` — the crossword game, same shape as the others
+  (`generator.py` also does grid placement, plus `clues.py` for
+  LLM/offline clue text), mounted under `/crossword`
 - `config.py`, `extensions.py`, `models.py` — Flask config, SQLAlchemy/Migrate/
   Flask-Login/Authlib instances, and the `User`/`ApiKey`/`Puzzle` models
 - `crypto.py` — Fernet encrypt/decrypt for stored per-user API keys
@@ -94,9 +98,9 @@ Then open http://127.0.0.1:5000
   per-feature templates extend it
 - `static/` — shared frontend assets
 
-More game types (crossword, sudoku) will each get their own
-`games/<type>/` package and blueprint alongside `word_search/` and
-`word_scramble/`.
+More game types (sudoku) will each get their own `games/<type>/`
+package and blueprint alongside `word_search/`, `word_scramble/`, and
+`crossword/`.
 
 Database: defaults to a local `instance/puzzles.db` SQLite file if
 `DATABASE_URL` isn't set. In production it points at a Supabase Postgres
