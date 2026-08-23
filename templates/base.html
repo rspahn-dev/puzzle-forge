@@ -18,6 +18,7 @@
     <div class="site-nav-links">
       <a href="{{ url_for('word_search.index') }}">Word Search</a>
       <a href="{{ url_for('word_scramble.index') }}">Word Scramble</a>
+      <a href="{{ url_for('crossword.index') }}">Crossword</a>
       <a href="{{ url_for('sudoku.index') }}">Sudoku</a>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('account.index') }}">{{ current_user.display_name or current_user.email }}</a>
