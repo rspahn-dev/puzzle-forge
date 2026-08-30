@@ -1,0 +1,13 @@
+name: Keep Render service awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping puzzle-forge
+        run: curl -fsS --max-time 30 https://puzzle-forge.onrender.com/ > /dev/null
