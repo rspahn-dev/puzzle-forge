@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping puzzle-forge
-        run: curl -fsS --max-time 30 https://puzzle-forge.onrender.com/ > /dev/null
+        run: curl -fsS --max-time 90 https://puzzle-forge.onrender.com/ > /dev/null
