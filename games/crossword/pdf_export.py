@@ -3,6 +3,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
+from games.pdf_common import draw_cover_page
+
 MARGIN = 0.7 * inch
 CLUE_BLOCK_HEIGHT = 2.4 * inch
 MAX_CELL = 0.42 * inch
@@ -14,6 +16,19 @@ def export_pdf(data: dict, theme: str, path: str):
     c.showPage()
     _draw_page(c, data, theme, show_answers=True)
     c.showPage()
+    c.save()
+
+
+def export_batch_pdf(entries: list[tuple], path: str):
+    """entries: list of (puzzle_data, theme) pairs, puzzles first, answer key section after."""
+    c = canvas.Canvas(path, pagesize=letter)
+    draw_cover_page(c, "Crossword Puzzles", len(entries))
+    for data, theme in entries:
+        _draw_page(c, data, theme, show_answers=False)
+        c.showPage()
+    for data, theme in entries:
+        _draw_page(c, data, theme, show_answers=True)
+        c.showPage()
     c.save()
 
 

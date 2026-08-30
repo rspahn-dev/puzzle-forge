@@ -18,3 +18,8 @@ class Config:
     # Render sets RENDER=true automatically; only require HTTPS-only cookies
     # in that environment, since local dev runs over plain http.
     SESSION_COOKIE_SECURE = bool(os.environ.get("RENDER"))
+
+    # In-memory limiter storage is fine as long as the app stays a single
+    # worker process (see the --workers 1 note in README) — counts would
+    # fragment across workers/processes otherwise.
+    RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")

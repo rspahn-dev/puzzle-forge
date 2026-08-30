@@ -3,7 +3,11 @@
 Not a substitute for live LLM generation — just enough curated themes
 (plus a generic fallback) to make the app usable with zero setup.
 """
+import json
 import random
+from pathlib import Path
+
+GENERATED_BANKS_PATH = Path(__file__).resolve().parent / "data" / "theme_banks.json"
 
 THEME_BANKS = {
     "animals": ["TIGER", "ELEPHANT", "GIRAFFE", "MONKEY", "RABBIT", "PANDA", "CHEETAH", "DOLPHIN",
@@ -36,6 +40,9 @@ THEME_BANKS = {
               "FALCON", "PELICAN", "WOODPECKER", "HUMMINGBIRD"],
     "flowers": ["DAISY", "TULIP", "ORCHID", "SUNFLOWER", "LAVENDER", "MARIGOLD", "PETUNIA",
                 "HIBISCUS", "CARNATION", "MAGNOLIA", "BUTTERCUP", "DANDELION"],
+    "dogs": ["POODLE", "BEAGLE", "COLLIE", "SPANIEL", "PUPPY", "KENNEL", "LEASH", "FETCH",
+             "BULLDOG", "MASTIFF", "LABRADOR", "SHEPHERD", "DOGHOUSE", "GROOMING",
+             "RETRIEVER", "DALMATIAN", "PAWPRINT", "WAGGING", "BARKING"],
 }
 
 THEME_KEYWORDS = {
@@ -54,6 +61,7 @@ THEME_KEYWORDS = {
     "vehicles": ["vehicle", "car", "transport", "transportation"],
     "birds": ["bird", "avian"],
     "flowers": ["flower", "plant", "botanical", "garden"],
+    "dogs": ["dog", "puppy", "canine", "pooch", "hound"],
 }
 
 GENERIC_BANK = [
@@ -61,6 +69,23 @@ GENERIC_BANK = [
     "COMPASS", "RIVER", "SHADOW", "GARDEN", "THUNDER", "CRYSTAL", "VELVET", "HORIZON",
     "ISLAND", "PUZZLE", "BREEZE", "ECHO", "FOREST", "GLACIER", "ORCHARD", "TWILIGHT",
 ]
+
+
+def _load_generated_banks() -> dict:
+    """Themes produced by scripts/generate_word_banks.py, if it's been run.
+
+    Loaded once at import time and merged on top of the hand-curated
+    THEME_BANKS below, so a generated theme never overrides a curated one.
+    """
+    if not GENERATED_BANKS_PATH.exists():
+        return {}
+    try:
+        return json.loads(GENERATED_BANKS_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+THEME_BANKS = {**_load_generated_banks(), **THEME_BANKS}
 
 
 def get_offline_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
@@ -72,6 +97,15 @@ def get_offline_word_list(theme: str, count: int = 12, min_len: int = 4, max_len
     else:
         for key, keywords in THEME_KEYWORDS.items():
             if any(kw in theme_lower or theme_lower in kw for kw in keywords):
+                bank_key = key
+                break
+
+    if bank_key is None:
+        # Loose match against every bank key (covers generated themes that
+        # have no THEME_KEYWORDS entry, e.g. typing "puzzle books" against
+        # a generated "puzzles" bank).
+        for key in THEME_BANKS:
+            if key in theme_lower or theme_lower in key:
                 bank_key = key
                 break
 

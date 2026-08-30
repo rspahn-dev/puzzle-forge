@@ -32,6 +32,7 @@
     <a href="{{ url_for('word_scramble.index') }}" class="{{ 'active' if request.endpoint == 'word_scramble.index' else '' }}">Word Scramble</a>
     <a href="{{ url_for('crossword.index') }}" class="{{ 'active' if request.endpoint == 'crossword.index' else '' }}">Crossword</a>
     <a href="{{ url_for('sudoku.index') }}" class="{{ 'active' if request.endpoint == 'sudoku.index' else '' }}">Sudoku</a>
+    <a href="{{ url_for('batch.index') }}" class="{{ 'active' if request.endpoint == 'batch.index' else '' }}">Batch / Book</a>
   </nav>
   <main>
     {% with messages = get_flashed_messages() %}

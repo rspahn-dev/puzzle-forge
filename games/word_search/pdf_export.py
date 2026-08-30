@@ -3,6 +3,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
+from games.pdf_common import draw_cover_page
+
 MARGIN = 0.7 * inch
 
 
@@ -12,6 +14,19 @@ def export_pdf(puzzle, theme: str, path: str):
     c.showPage()
     _draw_page(c, puzzle, theme, show_answers=True)
     c.showPage()
+    c.save()
+
+
+def export_batch_pdf(entries: list[tuple], path: str):
+    """entries: list of (WordSearchPuzzle, theme) pairs, puzzles first, answer key section after."""
+    c = canvas.Canvas(path, pagesize=letter)
+    draw_cover_page(c, "Word Search Puzzles", len(entries))
+    for puzzle, theme in entries:
+        _draw_page(c, puzzle, theme, show_answers=False)
+        c.showPage()
+    for puzzle, theme in entries:
+        _draw_page(c, puzzle, theme, show_answers=True)
+        c.showPage()
     c.save()
 
 

@@ -15,7 +15,14 @@ class ThemeGenerationError(RuntimeError):
     pass
 
 
-def generate_word_list(theme: str, api_key: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
+def generate_word_list(
+    theme: str,
+    api_key: str,
+    count: int = 12,
+    min_len: int = 4,
+    max_len: int = 10,
+    exclude: list[str] | None = None,
+) -> list[str]:
     theme = theme.strip()
     if not theme:
         raise ValueError("theme must not be empty")
@@ -24,12 +31,19 @@ def generate_word_list(theme: str, api_key: str, count: int = 12, min_len: int =
     if client is None:
         raise ThemeGenerationError("No API key available")
 
+    exclude_clause = ""
+    if exclude:
+        exclude_clause = (
+            f"- Do not use any of these words, they're already taken: {', '.join(exclude)}\n"
+        )
+
     prompt = (
         f'Generate exactly {count} words for a word search puzzle themed "{theme}".\n\n'
         "Rules:\n"
         f"- Each word must be {min_len}-{max_len} letters long, A-Z only (no spaces, hyphens, or punctuation)\n"
         f'- Words should be clearly and specifically related to the theme "{theme}"\n'
         "- No duplicate words\n"
+        f"{exclude_clause}"
         "- Return ONLY a JSON array of uppercase strings, nothing else. "
         'Example: ["APPLE", "BANANA"]'
     )
@@ -41,14 +55,23 @@ def generate_word_list(theme: str, api_key: str, count: int = 12, min_len: int =
     )
     text = resp.content[0].text.strip()
 
-    match = re.search(r"\[.*\]", text, re.DOTALL)
-    if not match:
+    candidates = re.findall(r"\[.*?\]", text, re.DOTALL)
+    if not candidates:
         raise ThemeGenerationError(f"Could not find a JSON array in the model response: {text!r}")
 
-    try:
-        raw_words = json.loads(match.group(0))
-    except json.JSONDecodeError as e:
-        raise ThemeGenerationError(f"Model response was not valid JSON: {text!r}") from e
+    # The model occasionally self-corrects mid-response and emits more than
+    # one array (e.g. "wait, that has a duplicate, here's the fix: [...]").
+    # The last one is its final answer, so try candidates newest-first.
+    raw_words = None
+    for candidate in reversed(candidates):
+        try:
+            raw_words = json.loads(candidate)
+            break
+        except json.JSONDecodeError:
+            continue
+
+    if raw_words is None:
+        raise ThemeGenerationError(f"Model response was not valid JSON: {text!r}")
 
     cleaned = []
     seen = set()

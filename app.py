@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 
 load_dotenv()
 
 from config import Config
-from extensions import db, login_manager, migrate, oauth
+from extensions import db, limiter, login_manager, migrate, oauth
 
 
 def create_app(config_class=Config):
@@ -16,6 +16,12 @@ def create_app(config_class=Config):
 
     login_manager.init_app(flask_app)
     login_manager.login_view = "auth.login"
+
+    limiter.init_app(flask_app)
+
+    @flask_app.errorhandler(429)
+    def rate_limited(e):
+        return jsonify({"error": "Too many requests — please wait a bit and try again."}), 429
 
     oauth.init_app(flask_app)
     oauth.register(
@@ -34,6 +40,7 @@ def create_app(config_class=Config):
 
     from account.routes import account_bp
     from auth.routes import auth_bp
+    from games.batch.routes import batch_bp
     from games.word_search.routes import word_search_bp
     from games.word_scramble.routes import word_scramble_bp
     from games.sudoku.routes import sudoku_bp
@@ -43,6 +50,7 @@ def create_app(config_class=Config):
     flask_app.register_blueprint(word_scramble_bp)
     flask_app.register_blueprint(sudoku_bp)
     flask_app.register_blueprint(crossword_bp)
+    flask_app.register_blueprint(batch_bp)
     flask_app.register_blueprint(auth_bp)
     flask_app.register_blueprint(account_bp)
 

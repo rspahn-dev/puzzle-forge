@@ -4,7 +4,7 @@ import tempfile
 from flask import Blueprint, after_this_request, jsonify, render_template, request, send_file
 from flask_login import current_user
 
-from extensions import db
+from extensions import db, limiter
 from models import Puzzle
 from games.sudoku.generator import DIFFICULTY_GIVENS, SudokuPuzzle
 from games.sudoku.pdf_export import export_pdf
@@ -18,6 +18,7 @@ def index():
 
 
 @sudoku_bp.route("/generate", methods=["POST"])
+@limiter.limit("60 per hour")
 def generate():
     data = request.get_json(force=True) or {}
     difficulty = (data.get("difficulty") or "medium").strip().lower()
@@ -41,6 +42,7 @@ def generate():
 
 
 @sudoku_bp.route("/download/<puzzle_id>.pdf")
+@limiter.limit("40 per hour")
 def download(puzzle_id):
     row = Puzzle.query.get(puzzle_id)
     if row is None or row.game_type != "sudoku":
