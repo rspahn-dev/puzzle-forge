@@ -65,25 +65,26 @@ body {
 }
 
 .page-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
   margin: 0.75rem 0 0;
-  padding: 0 1.25rem;
+  padding: 0 1.25rem 0 calc(180px + 2rem);
+  transition: padding-left 0.15s ease;
 }
 
 .site-sidebar {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  flex: 0 0 180px;
-  position: sticky;
-  top: 4.75rem;
-  min-height: calc(100vh - 6.75rem);
-  padding: 1.5rem 0 2rem;
+  width: 180px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: var(--bg);
+  z-index: 20;
+  padding: 1.5rem 0 1.5rem 1.25rem;
   border-right: 1px solid var(--border);
   font-size: 0.85rem;
-  transition: flex-basis 0.15s ease;
+  transition: width 0.15s ease;
 }
 .site-sidebar a, .sidebar-form-button {
   display: flex;
@@ -140,11 +141,12 @@ body {
 .sidebar-toggle:hover { color: var(--fg); background: var(--bg-alt); transform: none; }
 .sidebar-toggle .chevron { display: inline-block; transition: transform 0.15s ease; }
 
-html.sidebar-collapsed .site-sidebar { flex-basis: 56px; }
+html.sidebar-collapsed .site-sidebar { width: 56px; padding-left: 0; }
 html.sidebar-collapsed .site-sidebar a { justify-content: center; padding: 0.5rem; }
 html.sidebar-collapsed .site-sidebar .nav-label { display: none; }
 html.sidebar-collapsed .sidebar-toggle { align-self: center; }
 html.sidebar-collapsed .sidebar-toggle .chevron { transform: rotate(180deg); }
+html.sidebar-collapsed .page-body { padding-left: calc(56px + 2rem); }
 
 .link-button {
   background: none;
@@ -633,14 +635,14 @@ button:disabled { opacity: 0.7; cursor: default; box-shadow: none; }
 @media (max-width: 520px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
   .row { flex-direction: column; }
-  .page-body { flex-direction: column; gap: 0; }
+  .page-body { padding-left: 1.25rem; }
+  html.sidebar-collapsed .page-body { padding-left: 1.25rem; }
   .site-sidebar {
     flex-direction: row;
     flex-wrap: wrap;
-    flex-basis: auto;
-    min-height: auto;
     position: static;
     width: 100%;
+    height: auto;
     gap: 0.5rem 1rem;
     padding: 0.75rem 0 1rem;
     border-right: none;
@@ -657,6 +659,6 @@ button:disabled { opacity: 0.7; cursor: default; box-shadow: none; }
     gap: 0.5rem 1rem;
   }
   .sidebar-form-button { width: auto; padding: 0.3rem 0.5rem; }
-  html.sidebar-collapsed .site-sidebar { flex-basis: auto; }
+  html.sidebar-collapsed .site-sidebar { width: 100%; padding-left: 0; }
   html.sidebar-collapsed .site-sidebar .nav-label { display: inline; }
 }
