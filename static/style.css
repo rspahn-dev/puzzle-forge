@@ -51,8 +51,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  max-width: 1040px;
-  margin: 0 auto;
   padding: 1.25rem 1.25rem 0;
   font-size: 0.9rem;
 }
@@ -69,8 +67,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 2rem;
-  max-width: 1040px;
-  margin: 0.75rem auto 0;
+  margin: 0.75rem 0 0;
   padding: 0 1.25rem;
 }
 
