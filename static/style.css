@@ -51,7 +51,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1.25rem 1.25rem 0;
+  height: 4rem;
+  padding: 0 1.25rem;
   font-size: 0.9rem;
 }
 .site-logo {
@@ -77,8 +78,8 @@ body {
   gap: 0.35rem;
   flex: 0 0 180px;
   position: sticky;
-  top: 1.5rem;
-  min-height: calc(100vh - 5rem);
+  top: 4.75rem;
+  min-height: calc(100vh - 6.75rem);
   padding: 1.5rem 0 2rem;
   border-right: 1px solid var(--border);
   font-size: 0.85rem;
