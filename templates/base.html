@@ -9,41 +9,72 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  </script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   <div class="backdrop"></div>
   <header class="site-header">
-    <div class="site-header-side"></div>
     <a class="site-logo" href="{{ url_for('word_search.index') }}">🧩 Puzzle Forge</a>
-    <div class="site-header-side site-header-auth">
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('account.index') }}">{{ current_user.display_name or current_user.email }}</a>
-        <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
-          <button type="submit" class="link-button">Sign out</button>
-        </form>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}">Sign in with Google</a>
-      {% endif %}
-    </div>
   </header>
-  <nav class="site-subnav">
-    <a href="{{ url_for('word_search.index') }}" class="{{ 'active' if request.endpoint == 'word_search.index' else '' }}">Word Search</a>
-    <a href="{{ url_for('word_scramble.index') }}" class="{{ 'active' if request.endpoint == 'word_scramble.index' else '' }}">Word Scramble</a>
-    <a href="{{ url_for('crossword.index') }}" class="{{ 'active' if request.endpoint == 'crossword.index' else '' }}">Crossword</a>
-    <a href="{{ url_for('sudoku.index') }}" class="{{ 'active' if request.endpoint == 'sudoku.index' else '' }}">Sudoku</a>
-    <a href="{{ url_for('batch.index') }}" class="{{ 'active' if request.endpoint == 'batch.index' else '' }}">Batch / Book</a>
-  </nav>
-  <main>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </main>
+  <div class="page-body">
+    <nav class="site-sidebar">
+      <button type="button" class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar" aria-label="Toggle sidebar">
+        <span class="chevron">‹</span>
+      </button>
+      <a href="{{ url_for('word_search.index') }}" class="{{ 'active' if request.endpoint == 'word_search.index' else '' }}" title="Word Search">
+        <span class="nav-icon">🔍</span><span class="nav-label">Word Search</span>
+      </a>
+      <a href="{{ url_for('word_scramble.index') }}" class="{{ 'active' if request.endpoint == 'word_scramble.index' else '' }}" title="Word Scramble">
+        <span class="nav-icon">🔀</span><span class="nav-label">Word Scramble</span>
+      </a>
+      <a href="{{ url_for('crossword.index') }}" class="{{ 'active' if request.endpoint == 'crossword.index' else '' }}" title="Crossword">
+        <span class="nav-icon">✏️</span><span class="nav-label">Crossword</span>
+      </a>
+      <a href="{{ url_for('sudoku.index') }}" class="{{ 'active' if request.endpoint == 'sudoku.index' else '' }}" title="Sudoku">
+        <span class="nav-icon">🔢</span><span class="nav-label">Sudoku</span>
+      </a>
+      <a href="{{ url_for('batch.index') }}" class="{{ 'active' if request.endpoint == 'batch.index' else '' }}" title="Batch / Book">
+        <span class="nav-icon">📚</span><span class="nav-label">Batch / Book</span>
+      </a>
+      <div class="sidebar-bottom">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('account.index') }}" class="{{ 'active' if request.endpoint == 'account.index' else '' }}" title="Settings">
+            <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+          </a>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="sidebar-form">
+            <button type="submit" class="sidebar-form-button" title="Sign out">
+              <span class="nav-icon">🚪</span><span class="nav-label">Sign out</span>
+            </button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" title="Sign in with Google">
+            <span class="nav-icon">🔑</span><span class="nav-label">Sign in with Google</span>
+          </a>
+        {% endif %}
+      </div>
+    </nav>
+    <main>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script>
+    document.getElementById('sidebarToggle').addEventListener('click', function () {
+      var collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('sidebarCollapsed', collapsed);
+    });
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
