@@ -37,7 +37,7 @@
 
       <div data-game-fields="word_search,word_scramble,crossword" class="active">
         <div class="field">
-          <label for="themes">Themes (one per line, up to 20 — one puzzle per theme)</label>
+          <label for="themes">Themes (one per line, up to 20)</label>
           <textarea id="themes" name="themes" placeholder="Ocean Life&#10;Outer Space&#10;Dinosaurs&#10;Halloween"></textarea>
         </div>
         <div class="row">
@@ -56,6 +56,15 @@
               <option value="12" selected>12 words</option>
               <option value="16">16 words</option>
               <option value="20">20 words</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="per-theme">Puzzles per theme</label>
+            <select id="per-theme" name="per_theme">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
             </select>
           </div>
         </div>

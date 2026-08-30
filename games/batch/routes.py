@@ -26,6 +26,8 @@ batch_bp = Blueprint("batch", __name__, url_prefix="/batch")
 
 MAX_THEMES = 20
 MAX_SUDOKU_COUNT = 20
+MAX_PER_THEME = 5
+MAX_THEMED_PUZZLES = 60
 THEMED_GAME_TYPES = ("word_search", "word_scramble", "crossword")
 
 
@@ -97,6 +99,9 @@ def generate():
         count = _clamped("count", 12, 5, 20)
         min_len = _clamped("min_len", 4, 3, 10)
         max_len = max(min_len, _clamped("max_len", 8, min_len, 12))
+        per_theme = _clamped("per_theme", 1, 1, MAX_PER_THEME)
+        if len(themes) * per_theme > MAX_THEMED_PUZZLES:
+            per_theme = max(1, MAX_THEMED_PUZZLES // len(themes))
 
         api_key = _resolve_api_key()
         entries = []
@@ -104,18 +109,20 @@ def generate():
         for theme in themes:
             words, _source = get_word_list(theme, count=count, min_len=min_len, max_len=max_len, api_key=api_key)
 
-            if game_type == "word_search":
-                entries.append((WordSearchPuzzle(words, size=size), theme))
-            elif game_type == "word_scramble":
-                entries.append((WordScramblePuzzle(words), theme))
-            else:  # crossword
-                puzzle = build_best(words)
-                if puzzle is None or len(puzzle.placements) < 3:
-                    skipped.append(theme)
-                    continue
-                placed_words = [p.word for p in puzzle.placements]
-                clues, _clue_source = get_clues(placed_words, theme, api_key=api_key)
-                entries.append((puzzle.to_dict(clues), theme))
+            for i in range(per_theme):
+                label = theme if per_theme == 1 else f"{theme} #{i + 1}"
+                if game_type == "word_search":
+                    entries.append((WordSearchPuzzle(words, size=size), label))
+                elif game_type == "word_scramble":
+                    entries.append((WordScramblePuzzle(words), label))
+                else:  # crossword
+                    puzzle = build_best(words)
+                    if puzzle is None or len(puzzle.placements) < 3:
+                        skipped.append(label)
+                        continue
+                    placed_words = [p.word for p in puzzle.placements]
+                    clues, _clue_source = get_clues(placed_words, theme, api_key=api_key)
+                    entries.append((puzzle.to_dict(clues), label))
 
         if not entries:
             return jsonify({"error": "Couldn't build any puzzles from those themes — try different ones."}), 400

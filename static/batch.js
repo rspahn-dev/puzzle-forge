@@ -29,6 +29,7 @@ form.addEventListener("submit", async (e) => {
     payload.themes = document.getElementById("themes").value.split("\n");
     payload.size = document.getElementById("size").value;
     payload.count = document.getElementById("count").value;
+    payload.per_theme = document.getElementById("per-theme").value;
   }
 
   generateBtn.disabled = true;
