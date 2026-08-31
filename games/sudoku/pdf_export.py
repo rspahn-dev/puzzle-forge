@@ -1,4 +1,6 @@
 """Print-ready PDF export: a puzzle page followed by an answer-key page."""
+from __future__ import annotations
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
@@ -19,11 +21,11 @@ def export_pdf(data: dict, path: str):
     c.save()
 
 
-def export_batch_pdf(puzzles: list[dict], path: str):
+def export_batch_pdf(puzzles: list[dict], path: str, title: str | None = None):
     """puzzles: list of puzzle data dicts, puzzles first, answer key section after."""
     c = canvas.Canvas(path, pagesize=letter)
     difficulty = puzzles[0]["difficulty"].capitalize() if puzzles else ""
-    draw_cover_page(c, f"Sudoku Puzzles ({difficulty})", len(puzzles))
+    draw_cover_page(c, title or f"Sudoku Puzzles ({difficulty})", len(puzzles), show_credit=title is None)
     for i, data in enumerate(puzzles, start=1):
         _draw_page(c, data, show_answers=False, number=i, total=len(puzzles))
         c.showPage()

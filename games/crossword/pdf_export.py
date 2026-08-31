@@ -1,4 +1,6 @@
 """Print-ready PDF export: a puzzle page followed by an answer-key page."""
+from __future__ import annotations
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
@@ -19,10 +21,10 @@ def export_pdf(data: dict, theme: str, path: str):
     c.save()
 
 
-def export_batch_pdf(entries: list[tuple], path: str):
+def export_batch_pdf(entries: list[tuple], path: str, title: str | None = None):
     """entries: list of (puzzle_data, theme) pairs, puzzles first, answer key section after."""
     c = canvas.Canvas(path, pagesize=letter)
-    draw_cover_page(c, "Crossword Puzzles", len(entries))
+    draw_cover_page(c, title or "Crossword Puzzles", len(entries), show_credit=title is None)
     for data, theme in entries:
         _draw_page(c, data, theme, show_answers=False)
         c.showPage()

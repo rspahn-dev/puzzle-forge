@@ -3,6 +3,7 @@ print-ready PDF (puzzles section, then an answer-key section) — the KDP/Etsy
 puzzle-book workflow. Puzzles aren't persisted individually; the PDF is built
 and streamed back in one request."""
 import os
+import random
 import tempfile
 
 from flask import Blueprint, after_this_request, current_app, jsonify, render_template, request, send_file
@@ -57,6 +58,7 @@ def index():
 def generate():
     data = request.get_json(force=True) or {}
     game_type = data.get("game_type")
+    book_title = (data.get("book_title") or "").strip()[:80] or None
 
     fd, path = tempfile.mkstemp(suffix=".pdf")
     os.close(fd)
@@ -80,7 +82,7 @@ def generate():
         count = max(1, min(MAX_SUDOKU_COUNT, count))
 
         puzzles = [SudokuPuzzle(difficulty).to_dict() for _ in range(count)]
-        export_sudoku_batch(puzzles, path)
+        export_sudoku_batch(puzzles, path, title=book_title)
         filename = f"sudoku_{difficulty}_batch.pdf"
 
     elif game_type in THEMED_GAME_TYPES:
@@ -107,10 +109,16 @@ def generate():
         entries = []
         skipped = []
         for theme in themes:
-            words, _source = get_word_list(theme, count=count, min_len=min_len, max_len=max_len, api_key=api_key)
+            # Fetch a wider pool once per theme (not once per puzzle, to avoid
+            # multiplying LLM calls) and sample a fresh subset per repeat, so
+            # "puzzles per theme" gives different words, not just a reshuffled
+            # grid of the same words.
+            pool_size = min(count * per_theme, 40) if per_theme > 1 else count
+            pool, _source = get_word_list(theme, count=pool_size, min_len=min_len, max_len=max_len, api_key=api_key)
 
             for i in range(per_theme):
                 label = theme if per_theme == 1 else f"{theme} #{i + 1}"
+                words = random.sample(pool, count) if per_theme > 1 and len(pool) > count else pool[:count]
                 if game_type == "word_search":
                     entries.append((WordSearchPuzzle(words, size=size), label))
                 elif game_type == "word_scramble":
@@ -128,11 +136,11 @@ def generate():
             return jsonify({"error": "Couldn't build any puzzles from those themes — try different ones."}), 400
 
         if game_type == "word_search":
-            export_search_batch(entries, path)
+            export_search_batch(entries, path, title=book_title)
         elif game_type == "word_scramble":
-            export_scramble_batch(entries, path)
+            export_scramble_batch(entries, path, title=book_title)
         else:
-            export_crossword_batch(entries, path)
+            export_crossword_batch(entries, path, title=book_title)
         filename = f"{game_type}_batch.pdf"
 
     else:

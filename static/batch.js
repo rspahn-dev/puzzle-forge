@@ -22,6 +22,8 @@ form.addEventListener("submit", async (e) => {
   const gameType = gameTypeSelect.value;
 
   const payload = { game_type: gameType };
+  const bookTitle = document.getElementById("book-title").value.trim();
+  if (bookTitle) payload.book_title = bookTitle;
   if (gameType === "sudoku") {
     payload.difficulty = document.getElementById("difficulty").value;
     payload.count = document.getElementById("sudoku-count").value;
