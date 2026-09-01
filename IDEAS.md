@@ -88,3 +88,61 @@ table — Flask-Migrate is already set up (`migrations/`).
 
 Scope is small: one model, one insert in an existing route, two new read
 routes, one migration.
+
+## Monetization: Etsy/KDP books vs. the site itself
+
+Two paths were discussed. Decision: focus on the puzzle-book path first —
+selling on the site directly (ads/subscriptions) needs real traffic before
+it's worth setting up, and traffic doesn't exist yet. Books can generate
+revenue immediately using batch mode as it already stands.
+
+### Path A: Etsy — sell the PDF as a digital download
+
+Fees (US seller, verify current numbers before publishing — Etsy changes
+these occasionally):
+- $0.20 per listing, renews every 4 months or immediately on a sale
+- 6.5% transaction fee on the sale price
+- ~3% + $0.25 payment processing
+
+Rough example — a themed puzzle book (like the 27-puzzle gardening word
+search sample) priced at $7.99:
+- Etsy/payment fees ≈ $0.20 (listing) + $0.52 (transaction) + $0.49
+  (processing) ≈ $1.21
+- Net ≈ $6.78/sale, and production cost is effectively $0 since the book
+  is self-generated (no printing, no inventory)
+
+Pros: instant global listing, no print/inventory cost, fast iteration
+(new theme = new listing in minutes with batch mode). Cons: the
+low-content-book category is crowded — the niche-theming work (gardening
+sub-themes, real crossword clues) is what's supposed to be the
+differentiator, not novelty of format.
+
+### Path B: Amazon KDP — print-on-demand paperback
+
+Royalty structure (verify against current KDP terms before publishing):
+- 60% royalty on standard (Amazon.com) distribution, minus print cost
+- 40% royalty if "expanded distribution" (other retailers/libraries) is
+  enabled
+- Print cost for a B&W interior paperback ≈ $0.85 + $0.012 × page count
+  (this formula holds up to a few hundred pages; there's a different
+  rate beyond that)
+
+Rough example — a 60-puzzle book (~130 pages with cover pages + answer
+key), list price $8.99:
+- Print cost ≈ $0.85 + $0.012 × 130 ≈ $2.41
+- Royalty ≈ 60% × $8.99 − $2.41 ≈ $2.98/sale (standard distribution)
+
+Pros: Amazon handles printing, shipping, and returns automatically —
+zero fulfillment work; built-in massive audience/search. Cons: lower
+per-unit margin than the Etsy digital path, royalties paid out on a
+~60-day delay, and the paperback format takes more PDF polish (bleed,
+margins, page count rules) than a digital download does.
+
+### Path C (deprioritized): monetizing the site directly
+
+Ideas floated: ads, a premium/subscription tier gating batch mode or
+higher puzzle limits, etc. Shelved because none of it pays off without
+existing traffic, and puzzle-forge doesn't have meaningful traffic yet.
+Revisit once book sales are validated and/or driving traffic back to the
+site — the "saving generated books to the account" feature above would
+also make more sense as a real premium-tier lever at that point.
