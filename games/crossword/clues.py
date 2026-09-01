@@ -4,10 +4,27 @@ from __future__ import annotations
 import json
 import os
 import re
+from pathlib import Path
 
 from games.llm_client import get_client
+from games.offline_words import resolve_bank_key
 
 DEFAULT_MODEL = os.environ.get("CROSSWORD_MODEL", "claude-haiku-4-5-20251001")
+
+GENERATED_CLUES_PATH = Path(__file__).resolve().parent.parent / "data" / "clue_banks.json"
+
+
+def _load_generated_clues() -> dict:
+    """Clue banks produced by scripts/generate_clue_banks.py, if it's been run."""
+    if not GENERATED_CLUES_PATH.exists():
+        return {}
+    try:
+        return json.loads(GENERATED_CLUES_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+CLUE_BANKS = _load_generated_clues()
 
 
 class ClueGenerationError(RuntimeError):
@@ -58,8 +75,10 @@ def generate_clues(words: list[str], theme: str, api_key: str) -> dict[str, str]
 
 
 def offline_clues(words: list[str], theme: str) -> dict[str, str]:
+    bank_key = resolve_bank_key(theme)
+    bank = CLUE_BANKS.get(bank_key, {}) if bank_key else {}
     label = theme.strip() or "this puzzle"
-    return {w: f"A {len(w)}-letter word related to {label}" for w in words}
+    return {w: bank.get(w, f"A {len(w)}-letter word related to {label}") for w in words}
 
 
 def get_clues(words: list[str], theme: str, api_key: str | None = None) -> tuple[dict[str, str], str]:

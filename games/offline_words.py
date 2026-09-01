@@ -3,6 +3,8 @@
 Not a substitute for live LLM generation — just enough curated themes
 (plus a generic fallback) to make the app usable with zero setup.
 """
+from __future__ import annotations
+
 import json
 import random
 from pathlib import Path
@@ -88,27 +90,33 @@ def _load_generated_banks() -> dict:
 THEME_BANKS = {**_load_generated_banks(), **THEME_BANKS}
 
 
-def get_offline_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
+def resolve_bank_key(theme: str) -> str | None:
+    """Match a freeform theme string to a THEME_BANKS key, or None for no match.
+
+    Shared by word-bank and clue-bank lookup so both agree on which theme a
+    given input resolves to.
+    """
     theme_lower = theme.strip().lower()
 
-    bank_key = None
     if theme_lower in THEME_BANKS:
-        bank_key = theme_lower
-    else:
-        for key, keywords in THEME_KEYWORDS.items():
-            if any(kw in theme_lower or theme_lower in kw for kw in keywords):
-                bank_key = key
-                break
+        return theme_lower
 
-    if bank_key is None:
-        # Loose match against every bank key (covers generated themes that
-        # have no THEME_KEYWORDS entry, e.g. typing "puzzle books" against
-        # a generated "puzzles" bank).
-        for key in THEME_BANKS:
-            if key in theme_lower or theme_lower in key:
-                bank_key = key
-                break
+    for key, keywords in THEME_KEYWORDS.items():
+        if any(kw in theme_lower or theme_lower in kw for kw in keywords):
+            return key
 
+    # Loose match against every bank key (covers generated themes that have
+    # no THEME_KEYWORDS entry, e.g. typing "puzzle books" against a
+    # generated "puzzles" bank).
+    for key in THEME_BANKS:
+        if key in theme_lower or theme_lower in key:
+            return key
+
+    return None
+
+
+def get_offline_word_list(theme: str, count: int = 12, min_len: int = 4, max_len: int = 10) -> list[str]:
+    bank_key = resolve_bank_key(theme)
     words = list(THEME_BANKS[bank_key]) if bank_key else list(GENERIC_BANK)
 
     filtered = [w for w in words if min_len <= len(w) <= max_len]
