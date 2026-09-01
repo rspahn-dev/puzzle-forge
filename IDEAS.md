@@ -34,3 +34,57 @@ Options, roughly in order of effort-to-coverage ratio:
 3. **Keep manually adding curated banks**
    What was done for "dogs" — highest quality, but doesn't scale past
    however many themes you're willing to hand-write one at a time.
+
+## Saving generated books to the account (scoped, not yet built)
+
+Problem: `games/batch/routes.py` builds each book's PDF to a tempfile,
+streams it back, then deletes it (`export_*_batch` → `send_file` →
+`after_this_request` cleanup) — nothing is persisted, logged in or not.
+Regenerating a book (to fix a typo in the title, tweak themes, etc.) means
+literally starting over, re-spending any live-API cost. Login currently
+does almost nothing besides letting a user store their own Anthropic key
+(see `account/routes.py`), so this is also the most natural feature to add
+to the login area.
+
+**Schema** — new `Book` model in `models.py`, separate from the existing
+`Puzzle` table (batch mode doesn't use `Puzzle` at all today):
+
+```python
+class Book(db.Model):
+    id = db.Column(db.String(36), primary_key=True, default=_uuid)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    game_type = db.Column(db.String(32), nullable=False)
+    title = db.Column(db.String(200))
+    puzzle_count = db.Column(db.Integer)
+    pdf_data = db.Column(db.LargeBinary, nullable=False)
+    file_size = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=_now)
+```
+
+`user_id` non-nullable — only save for logged-in users; storing PDFs for
+anonymous requests forever is pure liability with no way to retrieve them.
+
+**Hook point** — `games/batch/routes.py:149`, right before `send_file`: if
+`current_user.is_authenticated`, read the tempfile's bytes and insert a
+`Book` row before cleanup deletes the file. One extra DB write, no change
+to the response the caller gets today.
+
+**Retrieval** — two new routes, likely under `account_bp` since that's
+already the "your stuff" area:
+- `GET /account/books` — list titles/dates/puzzle counts, newest first
+- `GET /account/books/<id>.pdf` — stream `pdf_data` back, same
+  `send_file`/`download_name` pattern used elsewhere
+
+**Size/cost** — puzzle-book PDFs are typically low hundreds of KB to a few
+MB; Postgres handles that fine as `bytea` at this scale (Supabase free
+tier). Not a real cost concern unless usage gets heavy.
+
+**Guardrails worth adding**: a per-user cap (e.g. keep the last 20 books,
+delete oldest on insert) so this can't grow unbounded from
+regenerate-while-tweaking sessions, plus a delete action on the list page.
+
+**Migration**: one `flask db migrate` + `flask db upgrade` for the new
+table — Flask-Migrate is already set up (`migrations/`).
+
+Scope is small: one model, one insert in an existing route, two new read
+routes, one migration.
