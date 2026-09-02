@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from crypto import decrypt_api_key
 from extensions import db, limiter
+from games.access import anon_generation_gate
 from models import ApiKey, Puzzle
 from games.word_search.generator import WordSearchPuzzle
 from games.word_search.pdf_export import export_pdf
@@ -47,6 +48,10 @@ def generate():
         return jsonify({"error": "Please enter a theme."}), 400
     size = max(8, min(25, size))
     count = max(5, min(20, count))
+
+    gate_response = anon_generation_gate()
+    if gate_response:
+        return gate_response
 
     api_key = _resolve_api_key()
     words, source = get_word_list(theme, count=count, api_key=api_key)

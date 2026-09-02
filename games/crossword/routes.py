@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from crypto import decrypt_api_key
 from extensions import db, limiter
+from games.access import anon_generation_gate
 from models import ApiKey, Puzzle
 from games.crossword.clues import get_clues
 from games.crossword.generator import build_best
@@ -50,6 +51,10 @@ def generate():
     count = max(6, min(18, count))
     min_len = max(3, min(10, min_len))
     max_len = max(min_len, min(12, max_len))
+
+    gate_response = anon_generation_gate()
+    if gate_response:
+        return gate_response
 
     api_key = _resolve_api_key()
     words, word_source = get_word_list(theme, count=count, min_len=min_len, max_len=max_len, api_key=api_key)

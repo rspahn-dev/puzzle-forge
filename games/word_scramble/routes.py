@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from crypto import decrypt_api_key
 from extensions import db, limiter
+from games.access import anon_generation_gate
 from models import ApiKey, Puzzle
 from games.word_scramble.generator import WordScramblePuzzle
 from games.word_scramble.pdf_export import export_pdf
@@ -49,6 +50,10 @@ def generate():
     count = max(5, min(20, count))
     min_len = max(3, min(10, min_len))
     max_len = max(min_len, min(12, max_len))
+
+    gate_response = anon_generation_gate()
+    if gate_response:
+        return gate_response
 
     api_key = _resolve_api_key()
     words, source = get_word_list(theme, count=count, min_len=min_len, max_len=max_len, api_key=api_key)
