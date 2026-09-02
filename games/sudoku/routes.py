@@ -5,6 +5,7 @@ from flask import Blueprint, after_this_request, jsonify, render_template, reque
 from flask_login import current_user
 
 from extensions import db, limiter
+from games.access import anon_generation_gate
 from models import Puzzle
 from games.sudoku.generator import DIFFICULTY_GIVENS, SudokuPuzzle
 from games.sudoku.pdf_export import export_pdf
@@ -24,6 +25,10 @@ def generate():
     difficulty = (data.get("difficulty") or "medium").strip().lower()
     if difficulty not in DIFFICULTY_GIVENS:
         difficulty = "medium"
+
+    gate_response = anon_generation_gate()
+    if gate_response:
+        return gate_response
 
     puzzle = SudokuPuzzle(difficulty)
     result = puzzle.to_dict()
