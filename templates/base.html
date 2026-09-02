@@ -38,8 +38,9 @@
       <a href="{{ url_for('sudoku.index') }}" class="{{ 'active' if request.endpoint == 'sudoku.index' else '' }}" title="Sudoku">
         <span class="nav-icon">🔢</span><span class="nav-label">Sudoku</span>
       </a>
-      <a href="{{ url_for('batch.index') }}" class="{{ 'active' if request.endpoint == 'batch.index' else '' }}" title="Batch / Book">
+      <a href="{{ url_for('batch.index') }}" class="{{ 'active' if request.endpoint == 'batch.index' else '' }}" title="Batch / Book{{ ' — sign in required' if not current_user.is_authenticated else '' }}">
         <span class="nav-icon">📚</span><span class="nav-label">Batch / Book</span>
+        {% if not current_user.is_authenticated %}<span class="nav-lock" aria-hidden="true">🔒</span>{% endif %}
       </a>
       <div class="sidebar-bottom">
         {% if current_user.is_authenticated %}

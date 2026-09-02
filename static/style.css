@@ -102,6 +102,7 @@ body {
 .site-sidebar a:hover, .sidebar-form-button:hover { color: var(--fg); background: var(--bg-alt); }
 .site-sidebar a.active { color: var(--accent); background: var(--highlight); border-left-color: var(--accent); }
 .site-sidebar .nav-icon { flex: 0 0 auto; width: 1.4rem; text-align: center; font-size: 1.05rem; }
+.site-sidebar .nav-lock { margin-left: auto; font-size: 0.8rem; opacity: 0.65; }
 
 .sidebar-bottom {
   margin-top: auto;
@@ -144,6 +145,7 @@ body {
 html.sidebar-collapsed .site-sidebar { width: 56px; }
 html.sidebar-collapsed .site-sidebar a { justify-content: center; padding: 0.5rem; }
 html.sidebar-collapsed .site-sidebar .nav-label { display: none; }
+html.sidebar-collapsed .site-sidebar .nav-lock { display: none; }
 html.sidebar-collapsed .sidebar-toggle { align-self: center; }
 html.sidebar-collapsed .sidebar-toggle .chevron { transform: rotate(180deg); }
 html.sidebar-collapsed .page-body { padding-left: calc(56px + 2rem); }
@@ -661,4 +663,5 @@ button:disabled { opacity: 0.7; cursor: default; box-shadow: none; }
   .sidebar-form-button { width: auto; padding: 0.3rem 0.5rem; }
   html.sidebar-collapsed .site-sidebar { width: 100%; }
   html.sidebar-collapsed .site-sidebar .nav-label { display: inline; }
+  html.sidebar-collapsed .site-sidebar .nav-lock { display: inline; }
 }
