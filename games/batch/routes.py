@@ -6,8 +6,8 @@ import os
 import random
 import tempfile
 
-from flask import Blueprint, after_this_request, current_app, jsonify, render_template, request, send_file
-from flask_login import current_user
+from flask import Blueprint, after_this_request, jsonify, render_template, request, send_file
+from flask_login import current_user, login_required
 
 from crypto import decrypt_api_key
 from extensions import limiter
@@ -33,27 +33,19 @@ THEMED_GAME_TYPES = ("word_search", "word_scramble", "crossword")
 
 
 def _resolve_api_key():
-    if current_user.is_authenticated:
-        row = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first()
-        if row:
-            return decrypt_api_key(row.encrypted_key)
-        return None
-    # Dev-only convenience: never active under gunicorn/production (app.debug
-    # is only ever True via `python app.py`'s explicit debug=True).
-    if current_app.debug:
-        return os.environ.get("ANTHROPIC_API_KEY")
-    return None
+    row = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first()
+    return decrypt_api_key(row.encrypted_key) if row else None
 
 
 @batch_bp.route("/")
+@login_required
 def index():
-    has_api_key = False
-    if current_user.is_authenticated:
-        has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
+    has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
     return render_template("batch/index.html", has_api_key=has_api_key)
 
 
 @batch_bp.route("/generate", methods=["POST"])
+@login_required
 @limiter.limit("5 per hour")
 def generate():
     data = request.get_json(force=True) or {}
