@@ -33,6 +33,8 @@ THEMED_GAME_TYPES = ("word_search", "word_scramble", "crossword")
 
 
 def _resolve_api_key():
+    if current_user.prefer_offline_wordbank:
+        return None
     row = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first()
     return decrypt_api_key(row.encrypted_key) if row else None
 
@@ -41,7 +43,7 @@ def _resolve_api_key():
 @login_required
 def index():
     has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
-    return render_template("batch/index.html", has_api_key=has_api_key)
+    return render_template("batch/index.html", has_api_key=has_api_key, prefer_offline=current_user.prefer_offline_wordbank)
 
 
 @batch_bp.route("/generate", methods=["POST"])

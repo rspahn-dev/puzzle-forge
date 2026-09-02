@@ -18,6 +18,8 @@ crossword_bp = Blueprint("crossword", __name__, url_prefix="/crossword")
 
 def _resolve_api_key():
     if current_user.is_authenticated:
+        if current_user.prefer_offline_wordbank:
+            return None
         row = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first()
         if row:
             return decrypt_api_key(row.encrypted_key)
@@ -32,9 +34,11 @@ def _resolve_api_key():
 @crossword_bp.route("/")
 def index():
     has_api_key = False
+    prefer_offline = False
     if current_user.is_authenticated:
         has_api_key = ApiKey.query.filter_by(user_id=current_user.id, provider="anthropic").first() is not None
-    return render_template("crossword/index.html", has_api_key=has_api_key)
+        prefer_offline = current_user.prefer_offline_wordbank
+    return render_template("crossword/index.html", has_api_key=has_api_key, prefer_offline=prefer_offline)
 
 
 @crossword_bp.route("/generate", methods=["POST"])

@@ -27,7 +27,6 @@ def callback():
         db.session.add(user)
     else:
         user.email = email
-        user.display_name = name
     db.session.commit()
 
     login_user(user)
