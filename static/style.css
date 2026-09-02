@@ -283,6 +283,7 @@ textarea { resize: vertical; min-height: 7rem; font-family: "JetBrains Mono", mo
 .field-hint { color: var(--muted); font-size: 0.78rem; margin: 0.35rem 0 0; }
 [data-game-fields] { display: none; }
 [data-game-fields].active { display: flex; flex-direction: column; gap: 1.1rem; }
+.field[data-game-fields].active { gap: 0; }
 .skipped-note {
   color: var(--muted);
   font-size: 0.85rem;
