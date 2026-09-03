@@ -15,10 +15,23 @@ def index():
     error = None
 
     if request.method == "POST":
-        if request.form.get("action") == "remove":
+        action = request.form.get("action")
+
+        if action == "remove":
             if existing:
                 db.session.delete(existing)
                 db.session.commit()
+            return redirect(url_for("account.index"))
+
+        if action == "update_profile":
+            display_name = (request.form.get("display_name") or "").strip()
+            current_user.display_name = display_name or None
+            db.session.commit()
+            return redirect(url_for("account.index"))
+
+        if action == "update_prefs":
+            current_user.prefer_offline_wordbank = bool(request.form.get("prefer_offline_wordbank"))
+            db.session.commit()
             return redirect(url_for("account.index"))
 
         new_key = (request.form.get("api_key") or "").strip()

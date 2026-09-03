@@ -19,6 +19,7 @@ class User(UserMixin, db.Model):
     google_sub = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(255), nullable=False)
     display_name = db.Column(db.String(255))
+    prefer_offline_wordbank = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     created_at = db.Column(db.DateTime, default=_now)
 
     api_keys = db.relationship("ApiKey", backref="user", cascade="all, delete-orphan")

@@ -12,6 +12,16 @@
     {% if error %}<p class="flash flash-error">{{ error }}</p>{% endif %}
 
     <section class="card">
+      <h2>Profile</h2>
+      <form method="post" class="field">
+        <input type="hidden" name="action" value="update_profile">
+        <label for="display_name">Display name</label>
+        <input id="display_name" name="display_name" type="text" value="{{ current_user.display_name or '' }}" placeholder="e.g. Robin" autocomplete="off">
+        <button type="submit" style="margin-top: 0.75rem;">Save name</button>
+      </form>
+    </section>
+
+    <section class="card">
       <h2>Anthropic API key</h2>
 
       {% if masked_key %}
@@ -26,6 +36,7 @@
       {% endif %}
 
       <form method="post" class="field" style="margin-top: 1rem;">
+        <input type="hidden" name="action" value="save_key">
         <label for="api_key">{{ "Replace" if masked_key else "Add" }} your Anthropic API key</label>
         <input id="api_key" name="api_key" type="password" placeholder="sk-ant-..." autocomplete="off" required>
         <button type="submit" style="margin-top: 0.75rem;">Save key</button>
@@ -36,5 +47,18 @@
         <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
         Usage is billed to your own key, a small fraction of a cent per puzzle.
       </p>
+    </section>
+
+    <section class="card">
+      <h2>Word bank</h2>
+      <form method="post" class="field">
+        <input type="hidden" name="action" value="update_prefs">
+        <label class="checkbox-label">
+          <input type="checkbox" name="prefer_offline_wordbank" {% if current_user.prefer_offline_wordbank %}checked{% endif %}>
+          Always use the built-in word bank, even when I have an API key saved
+        </label>
+        <p class="hint">Turn this on to skip AI word-list generation entirely and avoid any API usage, even for themes the built-in bank doesn't cover well.</p>
+        <button type="submit" style="margin-top: 0.75rem;">Save preference</button>
+      </form>
     </section>
 {% endblock %}

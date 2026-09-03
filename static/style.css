@@ -281,6 +281,16 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; min-height: 7rem; font-family: "JetBrains Mono", monospace; font-size: 0.9rem; }
 
 .field-hint { color: var(--muted); font-size: 0.78rem; margin: 0.35rem 0 0; }
+.checkbox-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  text-transform: none;
+  font-weight: 500;
+  color: var(--fg);
+}
+.checkbox-label input[type="checkbox"] { width: auto; }
 [data-game-fields] { display: none; }
 [data-game-fields].active { display: flex; flex-direction: column; gap: 1.1rem; }
 .field[data-game-fields].active { gap: 0; }
