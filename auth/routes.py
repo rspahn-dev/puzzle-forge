@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint, current_app, redirect, url_for
 from flask_login import login_required, login_user, logout_user
 
 from extensions import db, oauth
@@ -11,6 +11,25 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 def login():
     redirect_uri = url_for("auth.callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
+
+
+@auth_bp.route("/dev-login")
+def dev_login():
+    """Bypass Google entirely and log in as a local dummy account. Dev-only
+    convenience: never active under gunicorn/production (app.debug is only
+    ever True via `python app.py`'s explicit debug=True), for testing pages
+    that require login when Google OAuth isn't set up or working locally."""
+    if not current_app.debug:
+        return "Not found", 404
+
+    user = User.query.filter_by(google_sub="dev-local").first()
+    if user is None:
+        user = User(google_sub="dev-local", email="dev@localhost", display_name="Dev User")
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+    return redirect(url_for("account.index"))
 
 
 @auth_bp.route("/callback")
